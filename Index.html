@@ -78,7 +78,7 @@
                 <i class="ph-bold ph-coffee text-xl"></i> DUKUNG CREATOR
             </button>
         </div>
-        <div class="absolute bottom-6 text-slate-600 font-bold tracking-[0.3em] text-xs">PRO UPDATE EDITION</div>
+        <div class="absolute bottom-6 text-slate-600 font-bold tracking-[0.3em] text-xs">PRO UPDATE EDITION v2</div>
     </div>
 
     <!-- Top UI Bar -->
@@ -102,6 +102,7 @@
         
         <div class="flex flex-col items-end gap-2 pointer-events-auto">
             <div class="flex flex-row items-center gap-2">
+                <!-- Support Button -->
                 <button onclick="openModal('donasiModal')" class="bg-[#1e293b] text-orange-400 p-2 rounded-2xl shadow-lg border-b-4 border-black/20 active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center">
                     <i class="ph-bold ph-coffee text-lg"></i>
                 </button>
@@ -275,12 +276,12 @@
     /** * MANCING MANIAAA * Pro Update Edition (Fixed & Polished) */
 
     const GAME_STATE = { IDLE: 0, POWER_METER: 1, CASTING: 2, WAITING: 3, FISHING: 4 };
-    const SAVE_KEY = 'mancingManiaSaveData_v5';
+    const SAVE_KEY = 'mancingManiaSaveData_v7';
 
     const state = {
         mode: GAME_STATE.IDLE, money: 0, xp: 0, level: 1, 
         isDay: true, isStorm: false, gameTime: 8 * 60, timeSpeed: 0.5, 
-        ambientFish: [], particles: [], floatingTexts: [], inventory: [], logbook: {},
+        ambientPool: [], particles: [], floatingTexts: [], inventory: [], logbook: {},
         splashes: [], accessories: [], 
         
         activeBait: null, isReeling: false, tension: 0, hookDepth: 0, targetDepth: 0, currentFish: null,
@@ -293,6 +294,10 @@
         currentRodIndex: 0, highestRodOwned: 0, currentCoolerIndex: 0, highestCoolerOwned: 0,
         stats: { rodPower: 0.6, tensionRecovery: 1.5, tensionBuild: 0.8, maxDepth: 150, capacity: 50 }
     };
+
+    // Initialize pools
+    state.ambientPool = Array.from({length: 25}, () => ({ active: false }));
+    for(let i=0; i<40; i++) state.particles.push({ active: true, x: Math.random(), y: Math.random(), speed: 0.001 + Math.random() * 0.003, size: 1 + Math.random() * 2 });
 
     // --- Lokasi & Tema Latar (Environment Themes) ---
     const LOC_THEMES = [
@@ -384,8 +389,6 @@
         } else { updateTopUI(); }
     }
 
-    for(let i=0; i<40; i++) state.particles.push({ active: true, x: Math.random(), y: Math.random(), speed: 0.001 + Math.random() * 0.003, size: 1 + Math.random() * 2 });
-
     // --- Databases ---
     const RARITY_STYLES = {
         "Common": "text-gray-400 border-gray-500/50 bg-gray-800/50", "Uncommon": "text-emerald-400 border-emerald-500/50 bg-emerald-900/50",
@@ -428,27 +431,30 @@
 
     const FISH_DB = {
         day: [
-            { id: "f1", name: "Kakap Matahari", color: "#facc15", value: 15, mass: 2, pullForce: 0.2, erratic: 0.02, spike: 5, stamina: 100, type: "standard", lore: "Sering berjemur di permukaan.", loc: 0 },
-            { id: "f2", name: "Kerapu Karang", color: "#f87171", value: 35, mass: 6, pullForce: 0.3, erratic: 0.05, spike: 10, stamina: 150, type: "round", lore: "Ikan gemuk yang rakus.", loc: 0 },
-            { id: "f_mahi", name: "Mahi-Mahi", color: "#4ade80", value: 150, mass: 18, pullForce: 0.6, erratic: 0.1, spike: 20, stamina: 250, type: "long", lore: "Gesit dan lincah di siang hari.", loc: 0 },
-            { id: "fc1", name: "Ikan Badut", color: "#f97316", value: 45, mass: 1, pullForce: 0.15, erratic: 0.2, spike: 5, stamina: 80, type: "standard", lore: "Bersembunyi di anemon berbisa.", loc: 1 },
-            { id: "fc2", name: "Kakatua Biru", color: "#06b6d4", value: 90, mass: 4, pullForce: 0.4, erratic: 0.15, spike: 15, stamina: 180, type: "round", lore: "Memakan karang dengan paruh kerasnya.", loc: 1 },
-            { id: "fc3", name: "Malaikat Laut", color: "#eab308", value: 180, mass: 3, pullForce: 0.5, erratic: 0.3, spike: 10, stamina: 200, type: "standard", lore: "Sangat indah dengan warna cerah.", loc: 1 },
-            { id: "fs1", name: "Kerapu Raksasa", color: "#78350f", value: 300, mass: 80, pullForce: 0.8, erratic: 0.05, spike: 25, stamina: 600, type: "round", lore: "Bersembunyi di badan kapal karam.", loc: 2 },
-            { id: "fs2", name: "Hiu Banteng", color: "#9ca3af", value: 600, mass: 150, pullForce: 1.0, erratic: 0.1, spike: 35, stamina: 500, type: "shark", lore: "Sangat agresif dan teritorial.", loc: 2 },
-            { id: "f_shark", name: "Hiu Putih Besar", color: "#cbd5e1", value: 1200, mass: 300, pullForce: 1.2, erratic: 0.1, spike: 40, stamina: 800, type: "shark", lore: "Predator puncak lautan lepas.", loc: 3 },
-            { id: "f_rainbow", name: "Ikan Pelangi", color: "rainbow", value: 2000, mass: 8, pullForce: 0.8, erratic: 0.2, spike: 25, stamina: 400, type: "standard", isSpecial: true, lore: "Sangat langka. Warnanya membiaskan cahaya.", loc: 3 }
+            { id: "f1", name: "Kakap Matahari", color: "#facc15", value: 15, mass: 2, pullForce: 0.2, erratic: 0.02, spike: 5, stamina: 100, type: "standard", lore: "Sering berjemur di permukaan.", loc: 0, weight: 60 },
+            { id: "f2", name: "Kerapu Karang", color: "#f87171", value: 35, mass: 6, pullForce: 0.3, erratic: 0.05, spike: 10, stamina: 150, type: "round", lore: "Ikan gemuk yang rakus.", loc: 0, weight: 40 },
+            { id: "f_mahi", name: "Mahi-Mahi", color: "#4ade80", value: 150, mass: 18, pullForce: 0.6, erratic: 0.1, spike: 20, stamina: 250, type: "long", lore: "Gesit dan lincah di siang hari.", loc: 0, weight: 20 },
+            { id: "fc1", name: "Ikan Badut", color: "#f97316", value: 45, mass: 1, pullForce: 0.15, erratic: 0.2, spike: 5, stamina: 80, type: "standard", lore: "Bersembunyi di anemon berbisa.", loc: 1, weight: 50 },
+            { id: "fc2", name: "Kakatua Biru", color: "#06b6d4", value: 90, mass: 4, pullForce: 0.4, erratic: 0.15, spike: 15, stamina: 180, type: "round", lore: "Memakan karang dengan paruh kerasnya.", loc: 1, weight: 35 },
+            { id: "fc3", name: "Malaikat Laut", color: "#eab308", value: 180, mass: 3, pullForce: 0.5, erratic: 0.3, spike: 10, stamina: 200, type: "standard", lore: "Sangat indah dengan warna cerah.", loc: 1, weight: 15 },
+            { id: "fs1", name: "Kerapu Raksasa", color: "#78350f", value: 300, mass: 80, pullForce: 0.8, erratic: 0.05, spike: 25, stamina: 600, type: "round", lore: "Bersembunyi di badan kapal karam.", loc: 2, weight: 30 },
+            { id: "fs2", name: "Hiu Banteng", color: "#9ca3af", value: 600, mass: 150, pullForce: 1.0, erratic: 0.1, spike: 35, stamina: 500, type: "shark", lore: "Sangat agresif dan teritorial.", loc: 2, weight: 15 },
+            { id: "f_shark", name: "Hiu Putih Besar", color: "#cbd5e1", value: 1200, mass: 300, pullForce: 1.2, erratic: 0.1, spike: 40, stamina: 800, type: "shark", lore: "Predator puncak lautan lepas.", loc: 3, weight: 5 },
+            { id: "f_rainbow", name: "Ikan Pelangi", color: "rainbow", value: 2000, mass: 8, pullForce: 0.8, erratic: 0.2, spike: 25, stamina: 400, type: "standard", isSpecial: true, lore: "Sangat langka. Warnanya membiaskan cahaya.", loc: 3, weight: 2 }
         ],
         night: [
-            { id: "f4", name: "Belut Muram", color: "#a855f7", value: 120, mass: 15, pullForce: 0.6, erratic: 0.15, spike: 20, stamina: 200, type: "eel", lore: "Bercahaya ungu di malam hari.", loc: 0 },
-            { id: "fcn1", name: "Lionfish", color: "#dc2626", value: 200, mass: 3, pullForce: 0.5, erratic: 0.3, spike: 20, stamina: 150, type: "standard", lore: "Duri beracun, sangat berbahaya.", loc: 1 },
-            { id: "fcn2", name: "Gurita Cincin", color: "#fbbf24", value: 350, mass: 5, pullForce: 0.7, erratic: 0.4, spike: 15, stamina: 300, type: "octopus", lore: "Kecil namun mematikan.", loc: 1 },
-            { id: "fsn1", name: "Belut Moray", color: "#4d7c0f", value: 400, mass: 30, pullForce: 0.7, erratic: 0.3, spike: 30, stamina: 450, type: "eel", lore: "Menyerang dari balik bayangan kapal.", loc: 2 },
-            { id: "fsn2", name: "Pari Hantu", color: "#334155", value: 700, mass: 120, pullForce: 0.9, erratic: 0.2, spike: 40, stamina: 600, type: "round", lore: "Melayang bagai hantu di dasar laut.", loc: 2 },
-            { id: "f5", name: "Horor Abisal", color: "#111827", value: 800, mass: 80, pullForce: 0.9, erratic: 0.25, spike: 45, stamina: 600, type: "angler", lore: "Lampu di kepalanya menjebak mangsa.", loc: 3 },
-            { id: "f_squid", name: "Cumi Vampir", color: "#be123c", value: 1000, mass: 60, pullForce: 0.8, erratic: 0.3, spike: 50, stamina: 550, type: "squid", lore: "Tentakel tajam penghisap darah.", loc: 3 },
-            { id: "f_octopus", name: "Kraken Raksasa", color: "#831843", value: 3000, mass: 500, pullForce: 1.5, erratic: 0.4, spike: 70, stamina: 1200, type: "octopus", lore: "Mitos yang bisa menghancurkan kapal.", loc: 3 },
-            { id: "f6", name: "Leviathan Bio", color: "#34d399", value: 5000, mass: 800, pullForce: 1.8, erratic: 0.3, spike: 60, stamina: 2000, type: "leviathan", lore: "Penguasa palung yang bersinar terang.", loc: 3 }
+            { id: "f_n_pari", name: "Pari Pasir", color: "#a1a1aa", value: 25, mass: 8, pullForce: 0.3, erratic: 0.05, spike: 8, stamina: 130, type: "round", lore: "Bersembunyi di pasir dangkal pada malam hari.", loc: 0, weight: 60 },
+            { id: "f_n_cumi", name: "Cumi Kunang", color: "#38bdf8", value: 60, mass: 1, pullForce: 0.2, erratic: 0.1, spike: 10, stamina: 90, type: "squid", lore: "Bersinar kelap-kelip seperti bintang jatuh di air.", loc: 0, weight: 40 },
+            { id: "f4", name: "Belut Muram", color: "#a855f7", value: 120, mass: 15, pullForce: 0.6, erratic: 0.15, spike: 20, stamina: 200, type: "eel", lore: "Bercahaya ungu di malam hari.", loc: 0, weight: 30 },
+            
+            { id: "fcn1", name: "Lionfish", color: "#dc2626", value: 200, mass: 3, pullForce: 0.5, erratic: 0.3, spike: 20, stamina: 150, type: "standard", lore: "Duri beracun, sangat berbahaya.", loc: 1, weight: 45 },
+            { id: "fcn2", name: "Gurita Cincin", color: "#fbbf24", value: 350, mass: 5, pullForce: 0.7, erratic: 0.4, spike: 15, stamina: 300, type: "octopus", lore: "Kecil namun mematikan.", loc: 1, weight: 25 },
+            { id: "fsn1", name: "Belut Moray", color: "#4d7c0f", value: 400, mass: 30, pullForce: 0.7, erratic: 0.3, spike: 30, stamina: 450, type: "eel", lore: "Menyerang dari balik bayangan kapal.", loc: 2, weight: 30 },
+            { id: "fsn2", name: "Pari Hantu", color: "#334155", value: 700, mass: 120, pullForce: 0.9, erratic: 0.2, spike: 40, stamina: 600, type: "round", lore: "Melayang bagai hantu di dasar laut.", loc: 2, weight: 15 },
+            { id: "f5", name: "Horor Abisal", color: "#111827", value: 800, mass: 80, pullForce: 0.9, erratic: 0.25, spike: 45, stamina: 600, type: "angler", lore: "Lampu di kepalanya menjebak mangsa.", loc: 3, weight: 10 },
+            { id: "f_squid", name: "Cumi Vampir", color: "#be123c", value: 1000, mass: 60, pullForce: 0.8, erratic: 0.3, spike: 50, stamina: 550, type: "squid", lore: "Tentakel tajam penghisap darah.", loc: 3, weight: 8 },
+            { id: "f_octopus", name: "Kraken Raksasa", color: "#831843", value: 3000, mass: 500, pullForce: 1.5, erratic: 0.4, spike: 70, stamina: 1200, type: "octopus", lore: "Mitos yang bisa menghancurkan kapal.", loc: 3, weight: 3 },
+            { id: "f6", name: "Leviathan Bio", color: "#34d399", value: 5000, mass: 800, pullForce: 1.8, erratic: 0.3, spike: 60, stamina: 2000, type: "leviathan", lore: "Penguasa palung yang bersinar terang.", loc: 3, weight: 1 }
         ]
     };
 
@@ -550,7 +556,7 @@
 
     const cachedGradients = { day: null, night: null, storm: null };
     const cachedFishSprites = {};
-    const cachedFishDataURLs = {}; // Untuk icon dinamis di Jurnal/Boks Es
+    const cachedFishDataURLs = {}; 
     
     function getFishSprite(type, color, shapeClass) {
         const key = `${type}_${color}_${shapeClass}`;
@@ -561,13 +567,11 @@
         } return cachedFishSprites[key];
     }
 
-    // Fungsi baru untuk generate base64 icon ikan UI
     function getFishDataURL(type, color) {
         const key = `${type}_${color}`;
         if (!cachedFishDataURLs[key]) {
             const off = document.createElement('canvas'); off.width = 80; off.height = 80;
             const octx = off.getContext('2d');
-            // Untuk preview UI statis (bukan canvas utama), time = 0 agar warna rainbow stabil
             drawDetailedFish(octx, type, color, 40, 40, 30, 0, false);
             cachedFishDataURLs[key] = off.toDataURL();
         } return cachedFishDataURLs[key];
@@ -623,7 +627,6 @@
         }
     };
 
-    // Swipe to Counter Logic
     let touchStartX = null;
     window.addEventListener('pointerdown', e => { touchStartX = e.clientX; });
     window.addEventListener('pointerup', e => {
@@ -648,7 +651,6 @@
 
     document.getElementById('modalBtn').addEventListener('click', () => { closeModal('messageModal'); resetToIdle(); });
 
-    // Menu Interactions
     document.getElementById('coolerBtn').addEventListener('click', () => { if(state.mode===GAME_STATE.IDLE) { updateCoolerUI(); openModal('coolerModal'); }});
     document.getElementById('closeCoolerBtn').addEventListener('click', () => closeModal('coolerModal'));
     document.getElementById('shopBtn').addEventListener('click', () => { if(state.mode===GAME_STATE.IDLE) { updateShopUI(); openModal('shopModal'); }});
@@ -691,7 +693,6 @@
             const isUnlocked = state.level >= loc.reqLvl;
             const isCurrent = state.currentLocation === idx;
             
-            // Generate Stars for Difficulty
             let stars = Array(5).fill('<i class="ph-bold ph-star text-slate-600"></i>');
             for(let i=0; i<loc.diff; i++) stars[i] = '<i class="ph-fill ph-star text-amber-400"></i>';
             const starHTML = `<div class="flex gap-0.5 mt-1">${stars.join('')}</div>`;
@@ -849,7 +850,7 @@
         
         const w = canvas.width / (window.devicePixelRatio||1); const h = canvas.height / (window.devicePixelRatio||1);
         const boatX = w * 0.5, rodTipLocalX = (w * 0.35) - boatX - 2;
-        createSplash(boatX + rodTipLocalX, h * 0.22, 15, '#38bdf8'); // Cipratan saat melempar
+        createSplash(boatX + rodTipLocalX, h * 0.22, 15, '#38bdf8'); 
         playSfx('cast'); vibrate(40);
     }
 
@@ -859,20 +860,26 @@
         
         const rawPool = state.isDay ? FISH_DB.day : FISH_DB.night;
         const pool = rawPool.filter(f => f.loc <= state.currentLocation);
-        let index = Math.floor(Math.random() * pool.length);
         
-        if (state.activeBait === 'daging') index = Math.min(pool.length - 1, index + 2); 
-        else if (state.activeBait === 'fosfor' && !state.isDay) index = pool.length - 1; 
-        
-        // Item: Lampu Petromaks
-        if (state.accessories.includes('lantern') && !state.isDay && index < pool.length - 1) {
-            if (Math.random() > 0.5) index++;
+        // Pengambilan Ikan Berdasarkan Peluang (Weighted Random)
+        let weightedPool = pool.map(f => {
+            let w = f.weight || 10;
+            if (state.activeBait === 'daging' && (f.type === 'shark' || f.mass > 50)) w *= 3; 
+            if (state.activeBait === 'fosfor' && !state.isDay && f.loc >= 2) w *= 3; 
+            if (state.accessories.includes('lantern') && !state.isDay && f.loc >= 1) w *= 2;
+            if (state.isStorm && f.isSpecial) w *= 5;
+            return { fish: f, w: w };
+        });
+
+        let totalWeight = weightedPool.reduce((sum, item) => sum + item.w, 0);
+        let r = Math.random() * totalWeight;
+        let selectedFish = pool[0];
+        for (let item of weightedPool) {
+            r -= item.w;
+            if (r <= 0) { selectedFish = item.fish; break; }
         }
 
-        if (state.isStorm && Math.random() > 0.5) index = Math.min(pool.length - 1, index + 1);
-        else if (!state.isDay && state.hookDepth > 100 && Math.random() > 0.5) index = pool.length - 1;
-
-        state.currentFish = { ...pool[index] };
+        state.currentFish = { ...selectedFish };
         state.currentFish.currentStamina = state.currentFish.stamina;
 
         document.body.style.transform = "translateY(5px)"; setTimeout(() => document.body.style.transform = "translateY(0)", 100); playSfx('cast');
@@ -939,7 +946,7 @@
         if(color !== 'rainbow') { 
             grad.addColorStop(0, fillColor); 
             grad.addColorStop(0.6, fillColor); 
-            grad.addColorStop(1, '#e2e8f0'); // Perut ikan lebih terang
+            grad.addColorStop(1, '#e2e8f0');
         } else { 
             grad.addColorStop(0, fillColor); grad.addColorStop(1, '#ffffff'); 
         }
@@ -973,7 +980,7 @@
 
     function drawCanvasUI(w, h, timestamp) {
         if (state.mode === GAME_STATE.POWER_METER) {
-            const barW = 200, barH = 24, barX = w/2 - barW/2, barY = h * 0.45;
+            const barW = 200, barH = 24, barX = w/2 - barW/2, barY = h * 0.65; // Relayout Power Cast lebih ke bawah
             ctx.fillStyle = 'rgba(15, 23, 42, 0.8)'; ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 12); ctx.fill();
             const powerW = barW * Math.abs(state.powerMeter);
             const pGrad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
@@ -1017,7 +1024,6 @@
         }
     }
 
-    // Menggambar ornamen latar belakang sesuai lokasi di atas air
     function drawBackgroundScenery(ctx, w, h, timestamp) {
         const timeProgress = (state.gameTime % (24 * 60)) / (24 * 60);
         const isNightLocal = timeProgress < 0.25 || timeProgress > 0.75;
@@ -1026,7 +1032,6 @@
         ctx.globalAlpha = state.isStorm ? 0.5 : (isNightLocal ? 0.3 : 0.7);
         
         if (state.currentLocation === 0) { 
-            // Dermaga Tropis (Gunung & Pilar Dermaga)
             ctx.fillStyle = isNightLocal ? '#0f172a' : '#0369a1';
             ctx.beginPath(); ctx.moveTo(0, h*0.22); ctx.lineTo(w*0.2, h*0.15); ctx.lineTo(w*0.5, h*0.22); ctx.lineTo(w*0.8, h*0.1); ctx.lineTo(w, h*0.22); ctx.fill();
             
@@ -1034,16 +1039,13 @@
             ctx.fillRect(20, h*0.18, 10, h*0.04);
             ctx.fillRect(w - 30, h*0.15, 12, h*0.07);
         } else if (state.currentLocation === 1) { 
-            // Terumbu Karang (Pulau Pasir Kejauhan)
             ctx.fillStyle = isNightLocal ? '#042f2e' : '#0d9488';
             ctx.beginPath(); ctx.moveTo(w*0.4, h*0.22); ctx.quadraticCurveTo(w*0.7, h*0.18, w, h*0.22); ctx.fill();
         } else if (state.currentLocation === 2) { 
-            // Bangkai Kapal (Batu Karang Runcing)
             ctx.fillStyle = isNightLocal ? '#052e16' : '#3f6212';
             ctx.beginPath(); ctx.moveTo(0, h*0.22); ctx.lineTo(w*0.1, h*0.05); ctx.lineTo(w*0.3, h*0.22); 
             ctx.moveTo(w*0.6, h*0.22); ctx.lineTo(w*0.8, h*0.12); ctx.lineTo(w, h*0.22); ctx.fill();
         } else if (state.currentLocation === 3) { 
-            // Palung Mariana (Tebing Laut Dalam Gelap)
             ctx.fillStyle = isNightLocal ? '#000000' : '#1e3a8a';
             ctx.beginPath(); ctx.moveTo(w*0.1, h*0.22); ctx.lineTo(w*0.2, h*0.02); ctx.lineTo(w*0.35, h*0.22); ctx.fill();
         }
@@ -1069,32 +1071,32 @@
 
         const w = canvas.width / (window.devicePixelRatio||1); const h = canvas.height / (window.devicePixelRatio||1);
 
-        // --- Ambient Fish ---
-        if (Math.random() < 0.015 * timeScale && state.ambientFish.length < 20) {
-            const isLeft = Math.random() > 0.5;
-            let fishTypes, colors;
+        // --- Perbaikan Bug Ambient Fish & Spawn Object Pool ---
+        if (Math.random() < 0.02 * timeScale) {
+            let f = state.ambientPool.find(af => !af.active);
+            if (f) {
+                const isLeft = Math.random() > 0.5;
+                let fishTypes, colors;
 
-            // Memisahkan jenis ikan berdasarkan waktu (Siang / Malam) untuk latar belakang
-            if (state.isDay) {
-                colors = ['#ef4444', '#f97316', '#facc15', '#4ade80', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#ffffff'];
-                fishTypes = ['standard', 'long', 'round']; 
-                if (state.currentLocation >= 2) fishTypes.push('shark'); 
-            } else {
-                // Di malam hari, ikan neon bersinar (bioluminescence) dan ikan seram muncul!
-                colors = ['#a855f7', '#34d399', '#fde047', '#f43f5e', '#38bdf8', '#111827', '#be123c', '#4c1d95'];
-                fishTypes = ['standard', 'eel', 'angler', 'squid', 'round'];
-                if (state.currentLocation >= 2) fishTypes.push('octopus', 'leviathan', 'shark');
+                if (state.isDay) {
+                    colors = ['#ef4444', '#f97316', '#facc15', '#4ade80', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#ffffff'];
+                    fishTypes = ['standard', 'long', 'round']; 
+                    if (state.currentLocation >= 2) fishTypes.push('shark'); 
+                } else {
+                    colors = ['#a855f7', '#34d399', '#fde047', '#f43f5e', '#38bdf8', '#111827', '#be123c', '#4c1d95'];
+                    fishTypes = ['standard', 'eel', 'angler', 'squid', 'round'];
+                    if (state.currentLocation >= 2) fishTypes.push('octopus', 'leviathan', 'shark');
+                }
+                
+                f.x = (isLeft ? -50 : w + 50) + (Math.random()*30 - 15);
+                f.y = h * 0.3 + Math.random() * (h * 0.5) + (Math.random()*20 - 10);
+                f.speed = (0.1 + Math.random() * 0.3) * (isLeft ? 1 : -1);
+                f.size = 10 + Math.random() * 15; 
+                f.color = colors[Math.floor(Math.random()*colors.length)];
+                f.shape = fishTypes[Math.floor(Math.random()*fishTypes.length)];
+                f.id = Math.random();
+                f.active = true;
             }
-            
-            state.ambientFish.push({
-                x: (isLeft ? -50 : w + 50) + (Math.random()*30 - 15),
-                y: h * 0.3 + Math.random() * (h * 0.5) + (Math.random()*20 - 10),
-                speed: (0.1 + Math.random() * 0.3) * (isLeft ? 1 : -1),
-                size: 10 + Math.random() * 15, 
-                color: colors[Math.floor(Math.random()*colors.length)],
-                shape: fishTypes[Math.floor(Math.random()*fishTypes.length)],
-                id: Math.random()
-            });
         }
 
         if(timestamp % 60 < 16) {
@@ -1117,7 +1119,14 @@
             }
         }
 
-        let hookX = 0, hookY = 0, rodTipLocalY = (h * 0.2 - 60) - (h * 0.22) + 10;
+        const boatX = w * 0.5, boatY = h * 0.22;
+        const armBaseX = 10, armBaseY = -15; // Fisherman placement on boat
+        const pRot = (state.mode===GAME_STATE.POWER_METER || state.mode===GAME_STATE.CASTING) ? -0.4 : (state.mode===GAME_STATE.FISHING ? (state.isReeling ? Math.sin(timestamp*0.05)*0.3 : -0.15) : 0);
+        
+        const rodTipLocalX = (w * 0.35) - boatX - 10 - armBaseX;
+        const rodTipLocalY = (h * 0.2 - 60) - (h * 0.22) + 10;
+        
+        let hookX = 0, hookY = 0;
 
         if (state.mode === GAME_STATE.POWER_METER) {
             state.powerMeter += 0.04 * state.powerDir * timeScale;
@@ -1131,8 +1140,7 @@
                 state.waitTimer = (Math.random() * 100 + 50) * waitMod; 
             }
         } else if (state.mode === GAME_STATE.WAITING) {
-            if (state.waitTimer < 30) rodTipLocalY += Math.sin(timestamp * 0.5) * 5; 
-            if(state.isReeling) {
+            if (state.isReeling) {
                 state.hookDepth -= state.stats.rodPower * timeScale;
                 if(timestamp - audioState.lastReelClick > 200) { playSfx('reel'); audioState.lastReelClick = timestamp; }
                 if(state.hookDepth <= 0) { resetToIdle(); actionText.innerText = "LEMPAR"; actionIcon.className = "ph-bold ph-anchor text-[2rem] mb-0.5 text-[#0f172a]"; }
@@ -1204,14 +1212,11 @@
             ctx.beginPath(); ctx.arc(w * sunProgress, (h * 0.22) - Math.sin(sunProgress * Math.PI) * 120, 20, 0, Math.PI*2); ctx.fill();
         }
 
-        // Render Ornamen Langit/Latar Belakang di atas Air
         drawBackgroundScenery(ctx, w, h, timestamp);
 
-        // Render Air Laut
         ctx.fillStyle = state.isStorm ? cachedGradients.storm : (state.isDay ? cachedGradients.day : cachedGradients.night);
         ctx.fillRect(0, h * 0.22, w, h * 0.78);
 
-        // Plankton / Bioluminescence Render
         state.particles.forEach(p => {
             if (!p.active) return;
             p.y -= p.speed * h * timeScale; if(p.y < h * 0.22) { p.y = h; p.x = Math.random(); }
@@ -1225,10 +1230,11 @@
             ctx.beginPath(); ctx.arc(p.x * w, p.y, p.size, 0, Math.PI*2); ctx.fill();
         });
 
-        for (let i = state.ambientFish.length - 1; i >= 0; i--) {
-            const f = state.ambientFish[i];
+        // Ambient Fish Pool rendering
+        state.ambientPool.forEach(f => {
+            if (!f.active) return;
             f.x += f.speed * timeScale;
-            if (f.x < -100 || f.x > w + 100) { state.ambientFish.splice(i, 1); continue; }
+            if (f.x < -150 || f.x > w + 150) { f.active = false; return; }
             
             const sprite = getFishSprite(f.shape, f.color, f.shape);
             ctx.save(); ctx.translate(f.x, f.y + Math.sin(f.x*0.05 + timestamp*0.002)*10);
@@ -1237,7 +1243,7 @@
             ctx.rotate(Math.sin(timestamp * 0.005 + f.id) * 0.1);
             ctx.drawImage(sprite, -60, -60);
             ctx.restore();
-        }
+        });
 
         if (state.isStorm) {
             ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1.5; ctx.beginPath();
@@ -1245,14 +1251,10 @@
             if (Math.random() < 0.015 * timeScale) { ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(0,0,w,h); }
         }
 
-        const boatX = w * 0.5, boatY = h * 0.22;
-        
-        // Garis Permukaan Air
         const theme = LOC_THEMES[state.currentLocation] || LOC_THEMES[0];
         ctx.fillStyle = state.isStorm ? theme.storm.surface : (state.isDay ? theme.day.surface : theme.night.surface);
         ctx.fillRect(0, h * 0.22, w, 2);
 
-        // Render Water Splashes
         state.splashes.forEach((s, idx) => {
             s.x += s.vx * timeScale; s.y += s.vy * timeScale;
             s.vy += 0.2 * timeScale; s.life -= 0.02 * timeScale;
@@ -1265,27 +1267,91 @@
         });
         ctx.globalAlpha = 1;
 
-        // --- Boat & Fisherman ---
-        ctx.save(); ctx.translate(boatX, boatY + Math.sin(timestamp*0.002)*2);
-        ctx.fillStyle = state.isDay && !state.isStorm ? '#5c3a21' : '#29180c'; ctx.beginPath(); ctx.moveTo(-50, 0); ctx.lineTo(50, 0); ctx.lineTo(30, 15); ctx.lineTo(-40, 15); ctx.fill();
-        ctx.fillStyle = '#1e293b'; ctx.fillRect(-35, -12, 18, 12);
-
-        ctx.font = "36px 'Nunito', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("🤠", 2, -18);
-
-        const pRot = (state.mode===GAME_STATE.POWER_METER || state.mode===GAME_STATE.CASTING) ? -0.3 : (state.mode===GAME_STATE.FISHING ? (state.isReeling ? Math.sin(timestamp*0.05)*0.3 : -0.15) : 0);
-        ctx.save(); ctx.translate(2, -10); ctx.rotate(pRot);
-        ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 4; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(20, 5); ctx.stroke(); 
+        // --- Rendering Perahu & Karakter ---
+        const boatSway = Math.sin(timestamp*0.002)*2;
+        ctx.save(); ctx.translate(boatX, boatY + boatSway);
         
-        const rodTipLocalX = (w * 0.35) - boatX - 2; 
-        ctx.strokeStyle = RODS_DB[state.currentRodIndex].color; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(-7, 10); ctx.lineTo(20, 5); ctx.lineTo(rodTipLocalX, rodTipLocalY); ctx.stroke(); 
-        ctx.restore(); ctx.restore();
+        // Kapal Diperlebar
+        ctx.fillStyle = state.isDay && !state.isStorm ? '#78350f' : '#451a03'; 
+        ctx.beginPath(); ctx.moveTo(-70, 0); ctx.lineTo(70, 0); ctx.lineTo(45, 20); ctx.lineTo(-55, 20); ctx.fill();
+        
+        // Kabin
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(-45, -20, 30, 20);
+        ctx.fillStyle = '#38bdf8'; ctx.fillRect(-40, -15, 10, 8); 
+
+        // Cooler (Boks Es)
+        const coolerColors = ['#9ca3af', '#3b82f6', '#e2e8f0', '#0891b2'];
+        ctx.fillStyle = coolerColors[state.currentCoolerIndex] || '#9ca3af';
+        ctx.fillRect(-10, -8, 14, 8);
+        ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(-10, -8, 14, 2); 
+        
+        // Sonar Portabel
+        if (state.accessories.includes('sonar')) {
+            ctx.fillStyle = '#10b981'; ctx.beginPath(); ctx.arc(-30, -23, 3, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.4)';
+            ctx.beginPath(); ctx.moveTo(-30, -23); ctx.arc(-30, -23, 8, (timestamp*0.005)%(Math.PI*2), (timestamp*0.005 + 0.5)%(Math.PI*2)); ctx.fill();
+        }
+        
+        // Lampu Petromaks
+        if (state.accessories.includes('lantern')) {
+            ctx.fillStyle = '#1e293b'; ctx.fillRect(-60, -25, 2, 25); // Tiang
+            ctx.fillStyle = '#d97706'; ctx.fillRect(-63, -25, 8, 10);
+            ctx.fillStyle = '#fde047'; ctx.fillRect(-61, -23, 4, 5);
+            if (!state.isDay) {
+                const glow = ctx.createRadialGradient(-59, -20, 0, -59, -20, 40);
+                glow.addColorStop(0, 'rgba(253, 224, 71, 0.5)'); glow.addColorStop(1, 'rgba(253, 224, 71, 0)');
+                ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(-59, -20, 40, 0, Math.PI*2); ctx.fill();
+            }
+        }
+        
+        // Minuman Energi
+        if (state.accessories.includes('energy')) {
+            ctx.fillStyle = '#3b82f6'; ctx.fillRect(6, -6, 4, 6);
+            ctx.fillStyle = '#cbd5e1'; ctx.fillRect(6, -8, 4, 2);
+        }
+
+        // Karakter Nelayan (Vector HD - Non Blur)
+        ctx.save();
+        ctx.translate(10, 0); // Posisi nelayan di perahu
+        
+        ctx.fillStyle = '#eab308'; // Baju Hujan
+        ctx.beginPath(); ctx.roundRect(-10, -20, 20, 20, 6); ctx.fill();
+        ctx.fillStyle = '#ffedd5'; // Kepala
+        ctx.beginPath(); ctx.arc(0, -28, 7, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#b45309'; // Topi
+        ctx.beginPath(); ctx.ellipse(0, -34, 12, 3, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, -35, 6, Math.PI, 0); ctx.fill();
+        ctx.fillStyle = '#0f172a'; // Mata
+        ctx.beginPath(); ctx.arc(4, -28, 1, 0, Math.PI*2); ctx.fill();
+
+        // Lengan & Pancingan
+        ctx.save();
+        ctx.translate(armBaseX, armBaseY);
+        ctx.rotate(pRot);
+        
+        ctx.strokeStyle = '#eab308'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(15, 5); ctx.stroke(); // Lengan
+        ctx.fillStyle = '#ffedd5'; ctx.beginPath(); ctx.arc(15, 5, 3, 0, Math.PI*2); ctx.fill(); // Tangan
+
+        ctx.strokeStyle = RODS_DB[state.currentRodIndex].color; 
+        ctx.lineWidth = 2 + (state.currentRodIndex * 0.5); // Joran lebih tebal jika level naik
+        ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(15, 5); ctx.lineTo(rodTipLocalX, rodTipLocalY); ctx.stroke(); 
+        ctx.restore(); // Lengan
+        ctx.restore(); // Nelayan
+        ctx.restore(); // Perahu
 
         if (state.mode !== GAME_STATE.IDLE) {
-            const cx = 2, cy = -10; const rx = rodTipLocalX - cx, ry = rodTipLocalY - cy;
-            const rotX = rx * Math.cos(pRot) - ry * Math.sin(pRot) + cx; const rotY = rx * Math.sin(pRot) + ry * Math.cos(pRot) + cy;
-            const rodTipX = boatX + rotX; const rodTipY = boatY + Math.sin(timestamp*0.002)*2 + rotY;
+            // Kalkulasi posisi kail akurat
+            const baseRotX = boatX + 10 + armBaseX;
+            const baseRotY = boatY + boatSway + armBaseY;
+            
+            const rx = rodTipLocalX;
+            const ry = rodTipLocalY;
+            const rotX = rx * Math.cos(pRot) - ry * Math.sin(pRot);
+            const rotY = rx * Math.sin(pRot) + ry * Math.cos(pRot);
+            
+            const rodTipX = baseRotX + rotX;
+            const rodTipY = baseRotY + rotY;
 
             const visualDepthRatio = Math.min(1, state.hookDepth / state.stats.maxDepth);
             let sway = 0;
