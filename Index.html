@@ -63,7 +63,6 @@
 <div id="game-container">
     <canvas id="gameCanvas"></canvas>
 
-    <!-- Watermark Signature -->
     <div class="absolute top-4 left-1/2 -translate-x-1/2 text-white/30 text-[10px] font-black z-0 pointer-events-none tracking-widest uppercase drop-shadow-md">LUCKNUTGAMING</div>
 
     <!-- Intro Screen -->
@@ -84,7 +83,7 @@
                 <i class="ph-bold ph-coffee text-xl"></i> DUKUNG CREATOR
             </button>
         </div>
-        <div class="absolute bottom-6 text-slate-600 font-bold tracking-[0.3em] text-xs">MEGA UPDATE EDITION</div>
+        <div class="absolute bottom-6 text-slate-600 font-bold tracking-[0.3em] text-xs">PRO UPDATE EDITION</div>
     </div>
 
     <!-- Top UI Bar -->
@@ -141,7 +140,7 @@
     <div id="donasiModal" class="modal-overlay absolute inset-0 bg-black/80 z-50 flex flex-col justify-center items-center p-6 text-center backdrop-blur-md">
         <div class="modal-content flex flex-col items-center w-full max-w-sm bg-[#1e293b] p-6 rounded-3xl border-[3px] border-[#b45309]">
             <h2 class="text-2xl font-black text-[#f97316] mb-2 uppercase tracking-widest flex items-center gap-2"><i class="ph-bold ph-coffee"></i> Support Creator</h2>
-            <p class="text-slate-300 mb-6 text-sm font-medium leading-relaxed">Suka dengan gamenya? Dukung LucknutGaming melalui Saweria!</p>
+            <p class="text-slate-300 mb-6 text-sm font-medium leading-relaxed">Suka dengan gamenya? Dukung LucknutGaming melalui tautan QR di bawah!</p>
             <div class="bg-white w-full p-4 rounded-2xl shadow-xl mb-6 flex justify-center">
                 <img src="https://i.ibb.co.com/LXcHhSqK/image-8c3f98.png" alt="Saweria QR Code" class="w-full max-w-[220px] rounded-xl object-contain">
             </div>
@@ -271,27 +270,40 @@
 </div>
 
 <script>
-    /** * MANCING MANIAAA * Mega Update Edition */
+    /** * MANCING MANIAAA * Pro Update Edition */
 
     const GAME_STATE = { IDLE: 0, POWER_METER: 1, CASTING: 2, WAITING: 3, FISHING: 4 };
-    const SAVE_KEY = 'mancingManiaSaveData_v2';
+    const SAVE_KEY = 'mancingManiaSaveData_v3';
 
     const state = {
         mode: GAME_STATE.IDLE, money: 0, xp: 0, level: 1, 
-        isDay: true, isStorm: false, gameTime: 8 * 60, timeSpeed: 0.5, // Much slower time progression
+        isDay: true, isStorm: false, gameTime: 8 * 60, timeSpeed: 0.5, 
         ambientFish: [], particles: [], floatingTexts: [], inventory: [], logbook: {},
+        splashes: [], // Untuk cipratan air
         
         activeBait: null, isReeling: false, tension: 0, hookDepth: 0, targetDepth: 0, currentFish: null,
         directionalPull: null, pullTimer: 0, 
         powerMeter: 0, powerDir: 1,
         
-        currentLocation: 0, // 0 to 3
+        sweetSpotPos: 40, sweetSpotDir: 1, // Posisi zona aman yang bergerak
+        
+        currentLocation: 0,
         currentRodIndex: 0, highestRodOwned: 0, currentCoolerIndex: 0, highestCoolerOwned: 0,
         stats: { rodPower: 0.6, tensionRecovery: 1.5, tensionBuild: 0.8, maxDepth: 150, capacity: 50 }
     };
 
-    // --- Haptic Feedback ---
+    // --- Haptic Feedback & Particles ---
     function vibrate(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
+
+    function createSplash(x, y, count, color) {
+        for(let i=0; i<count; i++) {
+            state.splashes.push({
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 1) * 4 - 1,
+                life: 1, color: color
+            });
+        }
+    }
 
     function getXpForNextLevel(lvl) { return lvl * lvl * 100; }
     
@@ -339,7 +351,7 @@
         } else { updateTopUI(); }
     }
 
-    // Initialize particles
+    // Initialize plankton
     for(let i=0; i<40; i++) state.particles.push({ active: true, x: Math.random(), y: Math.random(), speed: 0.001 + Math.random() * 0.003, size: 1 + Math.random() * 2 });
 
     // --- Databases ---
@@ -378,31 +390,23 @@
 
     const FISH_DB = {
         day: [
-            // Loc 0: Dermaga
             { id: "f1", name: "Kakap Matahari", color: "#facc15", value: 15, mass: 2, pullForce: 0.2, erratic: 0.02, spike: 5, stamina: 100, type: "standard", lore: "Sering berjemur di permukaan.", loc: 0 },
             { id: "f2", name: "Kerapu Karang", color: "#f87171", value: 35, mass: 6, pullForce: 0.3, erratic: 0.05, spike: 10, stamina: 150, type: "round", lore: "Ikan gemuk yang rakus.", loc: 0 },
             { id: "f_mahi", name: "Mahi-Mahi", color: "#4ade80", value: 150, mass: 18, pullForce: 0.6, erratic: 0.1, spike: 20, stamina: 250, type: "long", lore: "Gesit dan lincah di siang hari.", loc: 0 },
-            // Loc 1: Coral Reef
             { id: "fc1", name: "Ikan Badut", color: "#f97316", value: 45, mass: 1, pullForce: 0.15, erratic: 0.2, spike: 5, stamina: 80, type: "standard", lore: "Bersembunyi di anemon berbisa.", loc: 1 },
             { id: "fc2", name: "Kakatua Biru", color: "#06b6d4", value: 90, mass: 4, pullForce: 0.4, erratic: 0.15, spike: 15, stamina: 180, type: "round", lore: "Memakan karang dengan paruh kerasnya.", loc: 1 },
             { id: "fc3", name: "Malaikat Laut", color: "#eab308", value: 180, mass: 3, pullForce: 0.5, erratic: 0.3, spike: 10, stamina: 200, type: "standard", lore: "Sangat indah dengan warna cerah.", loc: 1 },
-            // Loc 2: Shipwreck
             { id: "fs1", name: "Kerapu Raksasa", color: "#78350f", value: 300, mass: 80, pullForce: 0.8, erratic: 0.05, spike: 25, stamina: 600, type: "round", lore: "Bersembunyi di badan kapal karam.", loc: 2 },
             { id: "fs2", name: "Hiu Banteng", color: "#9ca3af", value: 600, mass: 150, pullForce: 1.0, erratic: 0.1, spike: 35, stamina: 500, type: "shark", lore: "Sangat agresif dan teritorial.", loc: 2 },
-            // Loc 3: Mariana
             { id: "f_shark", name: "Hiu Putih Besar", color: "#cbd5e1", value: 1200, mass: 300, pullForce: 1.2, erratic: 0.1, spike: 40, stamina: 800, type: "shark", lore: "Predator puncak lautan lepas.", loc: 3 },
             { id: "f_rainbow", name: "Ikan Pelangi", color: "rainbow", value: 2000, mass: 8, pullForce: 0.8, erratic: 0.2, spike: 25, stamina: 400, type: "standard", isSpecial: true, lore: "Sangat langka. Warnanya membiaskan cahaya.", loc: 3 }
         ],
         night: [
-            // Loc 0
             { id: "f4", name: "Belut Muram", color: "#a855f7", value: 120, mass: 15, pullForce: 0.6, erratic: 0.15, spike: 20, stamina: 200, type: "eel", lore: "Bercahaya ungu di malam hari.", loc: 0 },
-            // Loc 1
             { id: "fcn1", name: "Lionfish", color: "#dc2626", value: 200, mass: 3, pullForce: 0.5, erratic: 0.3, spike: 20, stamina: 150, type: "standard", lore: "Duri beracun, sangat berbahaya.", loc: 1 },
             { id: "fcn2", name: "Gurita Cincin", color: "#fbbf24", value: 350, mass: 5, pullForce: 0.7, erratic: 0.4, spike: 15, stamina: 300, type: "octopus", lore: "Kecil namun mematikan.", loc: 1 },
-            // Loc 2
             { id: "fsn1", name: "Belut Moray", color: "#4d7c0f", value: 400, mass: 30, pullForce: 0.7, erratic: 0.3, spike: 30, stamina: 450, type: "eel", lore: "Menyerang dari balik bayangan kapal.", loc: 2 },
             { id: "fsn2", name: "Pari Hantu", color: "#334155", value: 700, mass: 120, pullForce: 0.9, erratic: 0.2, spike: 40, stamina: 600, type: "round", lore: "Melayang bagai hantu di dasar laut.", loc: 2 },
-            // Loc 3
             { id: "f5", name: "Horor Abisal", color: "#111827", value: 800, mass: 80, pullForce: 0.9, erratic: 0.25, spike: 45, stamina: 600, type: "angler", lore: "Lampu di kepalanya menjebak mangsa.", loc: 3 },
             { id: "f_squid", name: "Cumi Vampir", color: "#be123c", value: 1000, mass: 60, pullForce: 0.8, erratic: 0.3, spike: 50, stamina: 550, type: "squid", lore: "Tentakel tajam penghisap darah.", loc: 3 },
             { id: "f_octopus", name: "Kraken Raksasa", color: "#831843", value: 3000, mass: 500, pullForce: 1.5, erratic: 0.4, spike: 70, stamina: 1200, type: "octopus", lore: "Mitos yang bisa menghancurkan kapal.", loc: 3 },
@@ -443,7 +447,6 @@
         if (!audioState.initialized || !audioState.ctx || audioState.muted) return;
         while (audioState.nextNoteTime < audioState.ctx.currentTime + 0.1) {
             const t = audioState.nextNoteTime; const ctx = audioState.ctx;
-            
             if (state.isDay && !state.isStorm && Math.random() < 0.2) {
                 const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(audioState.musicGain);
                 osc.type = 'sine'; osc.frequency.setValueAtTime(800, t); osc.frequency.exponentialRampToValueAtTime(400, t + 0.5);
@@ -540,7 +543,6 @@
             actionBtn.classList.add('bg-slate-200'); actionBtn.style.transform = "translateY(6px)"; actionBtn.style.boxShadow = "0 0px 0 #020617";
         }
         else if (state.mode === GAME_STATE.POWER_METER) {
-            // Second tap = cast!
             castLine();
         }
         else if (state.mode === GAME_STATE.WAITING || state.mode === GAME_STATE.FISHING) { 
@@ -563,10 +565,10 @@
     window.addEventListener('pointerup', e => {
         if (touchStartX !== null && state.directionalPull) {
             let dx = e.clientX - touchStartX;
-            if (Math.abs(dx) > 50) { // Swipe detected
+            if (Math.abs(dx) > 50) { 
                 if ((state.directionalPull === 'KIRI' && dx < 0) || (state.directionalPull === 'KANAN' && dx > 0)) {
                     state.directionalPull = null;
-                    state.tension = Math.max(0, state.tension - 25); // Huge tension reward
+                    state.tension = Math.max(0, state.tension - 25); 
                     spawnText("BERHASIL!", canvas.width/(2*window.devicePixelRatio), canvas.height/(2*window.devicePixelRatio) - 50, "#34d399");
                     vibrate([50, 100]); playSfx('perfect');
                     document.getElementById('dirWarning').style.opacity = 0;
@@ -753,10 +755,15 @@
     function castLine() {
         state.mode = GAME_STATE.CASTING; state.tension = 0; state.hookDepth = 0; 
         state.targetDepth = Math.max(20, state.stats.maxDepth * Math.abs(state.powerMeter)); 
-        state.pullTimer = 0; state.directionalPull = null; document.getElementById('dirWarning').style.opacity = 0;
+        state.pullTimer = 0; state.directionalPull = null; state.sweetSpotPos = 40;
+        document.getElementById('dirWarning').style.opacity = 0;
         
         actionText.innerText = "TARIK"; actionIcon.className = "ph-bold ph-arrow-fat-line-down text-[2rem] mb-0.5 text-blue-600"; 
         actionBtn.classList.remove('anim-pulse', 'bg-slate-200'); actionBtn.style.transform = "translateY(0)"; actionBtn.style.boxShadow = "0 6px 0 #020617";
+        
+        const w = canvas.width / (window.devicePixelRatio||1); const h = canvas.height / (window.devicePixelRatio||1);
+        const boatX = w * 0.5, rodTipLocalX = (w * 0.35) - boatX - 2;
+        createSplash(boatX + rodTipLocalX, h * 0.22, 15, '#38bdf8'); // Cipratan lemparan
         playSfx('cast'); vibrate(40);
     }
 
@@ -764,12 +771,10 @@
         state.mode = GAME_STATE.FISHING; actionBtn.classList.add('anim-pulse');
         vibrate([100, 50, 100]); 
         
-        // Filter pool by location and time
         const rawPool = state.isDay ? FISH_DB.day : FISH_DB.night;
         const pool = rawPool.filter(f => f.loc <= state.currentLocation);
         let index = Math.floor(Math.random() * pool.length);
         
-        // Bait & Weather Modifiers
         if (state.activeBait === 'daging') index = Math.min(pool.length - 1, index + 2); 
         else if (state.activeBait === 'fosfor' && !state.isDay) index = pool.length - 1; 
         else if (state.isStorm && Math.random() > 0.5) index = Math.min(pool.length - 1, index + 1);
@@ -785,7 +790,7 @@
         const f = state.currentFish; const currentWeight = state.inventory.reduce((sum, fish) => sum + fish.mass, 0);
         
         if(!state.logbook[f.id] || f.mass > state.logbook[f.id]) state.logbook[f.id] = f.mass;
-        const xpGain = (f.mass * 5) + Math.floor(f.value / 2); // XP formula
+        const xpGain = (f.mass * 5) + Math.floor(f.value / 2); 
         
         if(state.activeBait) { state.activeBait = null; updateBaitButtonUI(); }
 
@@ -814,11 +819,10 @@
         document.getElementById('modalTitle').innerText = "TALI PUTUS"; document.getElementById('modalTitle').style.color = "#ef4444";
         document.getElementById('modalDesc').innerHTML = reason;
         
-        // Custom Tali Putus Drawing
         modalVisualCtx.clearRect(0, 0, 160, 160); 
-        modalVisualCtx.strokeStyle = '#9ca3af'; modalVisualCtx.lineWidth = 3; modalVisualCtx.beginPath(); modalVisualCtx.moveTo(80, 20); modalVisualCtx.lineTo(80, 70); modalVisualCtx.stroke(); // Frayed line
+        modalVisualCtx.strokeStyle = '#9ca3af'; modalVisualCtx.lineWidth = 3; modalVisualCtx.beginPath(); modalVisualCtx.moveTo(80, 20); modalVisualCtx.lineTo(80, 70); modalVisualCtx.stroke(); 
         modalVisualCtx.strokeStyle = '#cbd5e1'; modalVisualCtx.lineWidth = 6; modalVisualCtx.lineCap = 'round';
-        modalVisualCtx.beginPath(); modalVisualCtx.arc(80, 95, 20, 0, Math.PI); modalVisualCtx.stroke(); // Broken Hook
+        modalVisualCtx.beginPath(); modalVisualCtx.arc(80, 95, 20, 0, Math.PI); modalVisualCtx.stroke(); 
         modalVisualCtx.fillStyle = '#ef4444'; modalVisualCtx.font = "bold 50px Arial"; modalVisualCtx.textAlign = "center"; modalVisualCtx.fillText("X", 80, 95);
 
         openModal('messageModal'); document.getElementById('dirWarning').style.opacity = 0;
@@ -830,7 +834,7 @@
     function resetToIdle() {
         state.mode = GAME_STATE.IDLE; state.hookDepth = 0; state.tension = 0; state.currentFish = null; state.isReeling = false; state.directionalPull = null;
         document.getElementById('dirWarning').style.opacity = 0;
-        if(state.activeBait) { state.activeBait = null; updateBaitButtonUI(); saveGame(); } // Lose bait if cancelled
+        if(state.activeBait) { state.activeBait = null; updateBaitButtonUI(); saveGame(); } 
     }
 
     // --- Vector Drawing ---
@@ -839,7 +843,16 @@
         ctxRef.rotate(Math.sin(time * 0.01) * 0.1); ctxRef.scale(size / 50, size / 50); 
         let fillColor = color; if (color === 'rainbow') { const h = (time * 0.1) % 360; fillColor = `hsl(${h}, 100%, 50%)`; }
         const grad = ctxRef.createLinearGradient(0, -20, 0, 20); 
-        if(color !== 'rainbow') { grad.addColorStop(0, fillColor); grad.addColorStop(0.8, '#222222'); } else { grad.addColorStop(0, fillColor); grad.addColorStop(1, '#ffffff'); }
+        
+        // Memperbaiki pewarnaan ikan agar lebih cerah dan hidup
+        if(color !== 'rainbow') { 
+            grad.addColorStop(0, fillColor); 
+            grad.addColorStop(0.6, fillColor); 
+            grad.addColorStop(1, '#e2e8f0'); // Perut ikan lebih terang agar pop out
+        } else { 
+            grad.addColorStop(0, fillColor); grad.addColorStop(1, '#ffffff'); 
+        }
+        
         ctxRef.fillStyle = grad; ctxRef.strokeStyle = '#000'; ctxRef.lineWidth = 1;
 
         ctxRef.beginPath();
@@ -869,7 +882,6 @@
 
     function drawCanvasUI(w, h, timestamp) {
         if (state.mode === GAME_STATE.POWER_METER) {
-            // Draw Casting Power Meter
             const barW = 150, barH = 20, barX = w/2 - barW/2, barY = h * 0.15;
             ctx.fillStyle = 'rgba(15, 23, 42, 0.8)'; ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 10); ctx.fill();
             const powerW = barW * Math.abs(state.powerMeter);
@@ -882,7 +894,6 @@
         }
 
         if (state.mode === GAME_STATE.CASTING || state.mode === GAME_STATE.WAITING || state.mode === GAME_STATE.FISHING) {
-            // Depth Meter UI
             const depthRatio = state.hookDepth / state.stats.maxDepth;
             const dX = w - 20, dY = h * 0.3, dH = h * 0.4;
             ctx.fillStyle = 'rgba(15, 23, 42, 0.6)'; ctx.beginPath(); ctx.roundRect(dX, dY, 6, dH, 3); ctx.fill();
@@ -891,7 +902,6 @@
 
         if (state.mode === GAME_STATE.FISHING && state.currentFish) {
             const f = state.currentFish;
-            // Draw Tension Bar (Right)
             const tX = w - 40, tY = h * 0.3, tW = 12, tH = h * 0.4;
             ctx.fillStyle = 'rgba(15, 23, 42, 0.8)'; ctx.beginPath(); ctx.roundRect(tX, tY, tW, tH, 6); ctx.fill();
             const fillH = (state.tension / 100) * tH;
@@ -900,10 +910,12 @@
             ctx.fillStyle = tGrad; ctx.beginPath(); ctx.roundRect(tX, tY + tH - fillH, tW, fillH, 6); ctx.fill();
             ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2; ctx.stroke();
             
-            // Sweet Spot Zone Indicator
-            ctx.fillStyle = 'rgba(56, 189, 248, 0.4)'; ctx.fillRect(tX - 2, tY + tH * 0.3, tW + 4, tH * 0.3);
+            // Dynamic Sweet Spot Zone Indicator
+            const zoneHeight = (30 / 100) * tH;
+            const zoneY = tY + tH - ((state.sweetSpotPos + 30) / 100) * tH;
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.4)'; ctx.fillRect(tX - 2, zoneY, tW + 4, zoneHeight);
 
-            // Draw Stamina Bar (Left of Tension)
+            // Draw Stamina Bar
             const sX = tX - 20, sY = tY + (tH*0.2), sW = 8, sH = tH * 0.8;
             ctx.fillStyle = 'rgba(15, 23, 42, 0.8)'; ctx.beginPath(); ctx.roundRect(sX, sY, sW, sH, 4); ctx.fill();
             const stamRatio = Math.max(0, f.currentStamina / f.stamina);
@@ -916,11 +928,17 @@
         }
     }
 
-    // --- Game Loop ---
+    // --- Game Loop dengan Delta Time ---
     let lastTime = 0;
 
     function gameLoop(timestamp) {
-        const dt = timestamp - lastTime; lastTime = timestamp;
+        if (!lastTime) lastTime = timestamp;
+        let dt = timestamp - lastTime; lastTime = timestamp;
+        
+        // Frame-rate independence (memastikan kecepatan konstan di layar 60hz vs 120hz)
+        let timeScale = dt / 16.666;
+        if (timeScale > 3) timeScale = 3; 
+        if (timeScale < 0.1) timeScale = 0.1;
 
         if (audioState.initialized && !audioState.muted) {
             audioState.ambientFilter.frequency.value = (state.isStorm ? 800 : 300) + Math.sin(timestamp * 0.001) * 200;
@@ -930,36 +948,34 @@
 
         const w = canvas.width / (window.devicePixelRatio||1); const h = canvas.height / (window.devicePixelRatio||1);
 
-        // Ambient Fish Expansion - Menambahkan variasi warna dan bentuk untuk background fish
-        if (Math.random() < 0.015 && state.ambientFish.length < 15) {
+        // Ambient Fish
+        if (Math.random() < 0.015 * timeScale && state.ambientFish.length < 15) {
             const isLeft = Math.random() > 0.5;
             let fishTypes = ['standard', 'long', 'round']; 
-            // Variasi warna cerah default
             let colors = ['#ef4444', '#f97316', '#facc15', '#4ade80', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#ffffff'];
             
             if (state.currentLocation >= 2) { 
                 fishTypes.push('shark', 'eel', 'squid', 'angler'); 
-                if (!state.isDay) colors.push('#111827', '#be123c', '#4c1d95'); // Gelap untuk malam hari di laut dalam
+                if (!state.isDay) colors.push('#111827', '#be123c', '#4c1d95'); 
             }
 
-            // Find inactive particle or create new
             let f = state.ambientFish.find(af => !af.active);
             if (!f) { f = {}; state.ambientFish.push(f); }
             f.active = true; f.x = (isLeft ? -50 : w + 50) + (Math.random()*30 - 15);
             f.y = h * 0.3 + Math.random() * (h * 0.5) + (Math.random()*20 - 10);
             f.speed = (0.1 + Math.random() * 0.3) * (isLeft ? 1 : -1);
-            f.size = 10 + Math.random() * 15; // Variasi ukuran sedikit diperbesar
+            f.size = 10 + Math.random() * 15; 
             f.color = colors[Math.floor(Math.random()*colors.length)];
             f.shape = fishTypes[Math.floor(Math.random()*fishTypes.length)];
             f.id = Math.random();
         }
 
         if(timestamp % 60 < 16) {
-            state.gameTime += state.timeSpeed; if(state.gameTime >= 24 * 60) state.gameTime = 0;
+            state.gameTime += state.timeSpeed * timeScale; if(state.gameTime >= 24 * 60) state.gameTime = 0;
             const hours = Math.floor(state.gameTime / 60); const wasDay = state.isDay; state.isDay = (hours >= 6 && hours < 18);
             
-            if (state.gameTime % 60 < state.timeSpeed) {
-                if(Math.random() < 0.05) {  // Less frequent storms
+            if (state.gameTime % 60 < state.timeSpeed * timeScale) {
+                if(Math.random() < 0.05) {  
                     state.isStorm = !state.isStorm; container.classList.toggle('storm', state.isStorm); 
                     if(state.isStorm) showNotification("BADAI DATANG!", "ph-cloud-lightning", "bg-red-600/90", "border-red-400/50");
                     else showNotification("BADAI REDA", "ph-sun", "bg-sky-500/90", "border-sky-300/50");
@@ -975,11 +991,11 @@
         let hookX = 0, hookY = 0, rodTipLocalY = (h * 0.2 - 60) - (h * 0.22) + 10;
 
         if (state.mode === GAME_STATE.POWER_METER) {
-            state.powerMeter += 0.04 * state.powerDir;
+            state.powerMeter += 0.04 * state.powerDir * timeScale;
             if (state.powerMeter >= 1 || state.powerMeter <= -1) state.powerDir *= -1;
         }
         else if (state.mode === GAME_STATE.CASTING) {
-            state.hookDepth += 2;
+            state.hookDepth += 2 * timeScale;
             if(state.hookDepth >= state.targetDepth || state.isReeling) { 
                 state.mode = GAME_STATE.WAITING; 
                 let waitMod = state.activeBait === 'cacing' ? 0.3 : (state.isStorm ? 0.5 : 1);
@@ -988,25 +1004,30 @@
         } else if (state.mode === GAME_STATE.WAITING) {
             if (state.waitTimer < 30) rodTipLocalY += Math.sin(timestamp * 0.5) * 5; 
             if(state.isReeling) {
-                state.hookDepth -= state.stats.rodPower;
+                state.hookDepth -= state.stats.rodPower * timeScale;
                 if(timestamp - audioState.lastReelClick > 200) { playSfx('reel'); audioState.lastReelClick = timestamp; }
                 if(state.hookDepth <= 0) { resetToIdle(); actionText.innerText = "LEMPAR"; actionIcon.className = "ph-bold ph-anchor text-[2rem] mb-0.5 text-[#0f172a]"; }
-            } else { state.waitTimer--; if(state.waitTimer <= 0) hookFish(); }
+            } else { state.waitTimer -= timeScale; if(state.waitTimer <= 0) hookFish(); }
         } else if (state.mode === GAME_STATE.FISHING) {
             const f = state.currentFish;
-            const inSweetSpot = state.tension > 40 && state.tension < 70;
+            
+            // Dynamic Sweet Spot Logic
+            state.sweetSpotPos += (0.2 + f.erratic) * state.sweetSpotDir * timeScale;
+            if (state.sweetSpotPos > 60 || state.sweetSpotPos < 10) state.sweetSpotDir *= -1;
+
+            const inSweetSpot = state.tension >= state.sweetSpotPos && state.tension <= state.sweetSpotPos + 30;
             const reelMultiplier = inSweetSpot ? 1.5 : 1;
             
             if (state.isReeling && inSweetSpot) {
-                f.currentStamina -= 0.5;
-                if(Math.random() < 0.05) { spawnText("-5 Stamina", hookX + (Math.random()*40-20), hookY - 20, "#facc15"); }
+                f.currentStamina -= 0.5 * timeScale;
+                if(Math.random() < 0.05 * timeScale) { spawnText("-5 Stamina", hookX + (Math.random()*40-20), hookY - 20, "#facc15"); }
             }
             
             const exhausted = f.currentStamina <= 0;
             const pForce = exhausted ? 0.1 : f.pullForce;
             const errMod = exhausted ? 0 : f.erratic;
 
-            if (!exhausted && !state.directionalPull && f.mass >= 20 && Math.random() < 0.005) {
+            if (!exhausted && !state.directionalPull && f.mass >= 20 && Math.random() < 0.005 * timeScale) {
                 state.directionalPull = Math.random() > 0.5 ? 'KIRI' : 'KANAN'; state.pullTimer = 100;
                 document.getElementById('dirWarning').style.opacity = 1;
                 document.getElementById('dirTextSpan').innerText = state.directionalPull;
@@ -1015,21 +1036,24 @@
             }
             
             if (state.directionalPull) {
-                state.pullTimer--;
-                if (state.isReeling) state.tension += 1.5; // Penalty
+                state.pullTimer -= timeScale;
+                if (state.isReeling) state.tension += 1.5 * timeScale; 
                 if (state.pullTimer <= 0) { state.directionalPull = null; document.getElementById('dirWarning').style.opacity = 0; }
             }
             
             if (state.isReeling) {
-                state.hookDepth -= (state.stats.rodPower * reelMultiplier);
-                state.tension += (state.stats.tensionBuild * pForce * (state.isStorm?1.2:1));
+                state.hookDepth -= (state.stats.rodPower * reelMultiplier) * timeScale;
+                state.tension += (state.stats.tensionBuild * pForce * (state.isStorm?1.2:1)) * timeScale;
                 if(timestamp - audioState.lastReelClick > (inSweetSpot?100:150)) { playSfx('reel'); vibrate(15); audioState.lastReelClick = timestamp; }
-                if (inSweetSpot && Math.random() < 0.1) { spawnText("SEMPURNA!", w*0.3 + Math.random()*20, h*0.4 + Math.random()*20, "#34d399"); if (Math.random() < 0.2) playSfx('perfect'); }
+                if (inSweetSpot && Math.random() < 0.1 * timeScale) { spawnText("SEMPURNA!", w*0.3 + Math.random()*20, h*0.4 + Math.random()*20, "#34d399"); if (Math.random() < 0.2) playSfx('perfect'); }
             } else {
-                state.hookDepth += pForce; state.tension -= state.stats.tensionRecovery;
+                state.hookDepth += pForce * timeScale; state.tension -= state.stats.tensionRecovery * timeScale;
             }
 
-            if (Math.random() < errMod) { state.tension += f.spike; container.classList.add('shake'); setTimeout(() => container.classList.remove('shake'), 50); }
+            if (Math.random() < errMod * timeScale) { 
+                state.tension += f.spike; container.classList.add('shake'); setTimeout(() => container.classList.remove('shake'), 50); 
+                createSplash(hookX, h * 0.22, 5, '#ffffff'); // Cipratan saat ikan meronta
+            }
             state.tension = Math.max(0, state.tension);
             
             if (state.tension >= 100) snapLine("Tarikan terlalu kuat! Ikan berhasil kabur.");
@@ -1044,26 +1068,23 @@
         ctx.fillStyle = state.isStorm ? cachedGradients.storm : (state.isDay ? cachedGradients.day : cachedGradients.night);
         ctx.fillRect(0, h * 0.22, w, h * 0.78);
 
-        // Parallax Sun/Moon
         if (!state.isStorm) {
-            const timeProgress = (state.gameTime % (24 * 60)) / (24 * 60); // Full day cycle
-            const sunProgress = (timeProgress * 2) % 1; // Sun/Moon path
+            const timeProgress = (state.gameTime % (24 * 60)) / (24 * 60); 
+            const sunProgress = (timeProgress * 2) % 1; 
             ctx.fillStyle = state.isDay ? '#fde047' : '#e2e8f0';
             ctx.beginPath(); ctx.arc(w * sunProgress, (h * 0.22) - Math.sin(sunProgress * Math.PI) * 120, 20, 0, Math.PI*2); ctx.fill();
         }
 
-        // Object Pool Plankton
         state.particles.forEach(p => {
             if (!p.active) return;
-            p.y -= p.speed * h; if(p.y < h * 0.22) { p.y = h; p.x = Math.random(); }
+            p.y -= p.speed * h * timeScale; if(p.y < h * 0.22) { p.y = h; p.x = Math.random(); }
             ctx.fillStyle = state.isDay && !state.isStorm ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)';
             ctx.beginPath(); ctx.arc(p.x * w, p.y, p.size, 0, Math.PI*2); ctx.fill();
         });
 
-        // Ambient Background Fish
         state.ambientFish.forEach(f => {
             if (!f.active) return;
-            f.x += f.speed; if (f.x < -100 || f.x > w + 100) { f.active = false; return; }
+            f.x += f.speed * timeScale; if (f.x < -100 || f.x > w + 100) { f.active = false; return; }
             const sprite = getFishSprite(f.type, f.color, f.shape);
             ctx.save(); ctx.translate(f.x, f.y + Math.sin(f.x*0.05 + timestamp*0.002)*10);
             if (f.speed < 0) ctx.scale(-1, 1);
@@ -1073,15 +1094,31 @@
             ctx.restore();
         });
 
-        // Storm Rain & Lightning
         if (state.isStorm) {
             ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1.5; ctx.beginPath();
             for(let i=0; i<30; i++) { let rx = Math.random() * w; let ry = Math.random() * h; ctx.moveTo(rx, ry); ctx.lineTo(rx - 15, ry + 40); } ctx.stroke();
-            if (Math.random() < 0.015) { ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(0,0,w,h); }
+            if (Math.random() < 0.015 * timeScale) { ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(0,0,w,h); }
         }
 
         const boatX = w * 0.5, boatY = h * 0.22;
         ctx.fillStyle = state.isDay && !state.isStorm ? '#0369a1' : '#020617'; ctx.fillRect(0, h * 0.22, w, 2);
+
+        // Render Water Splashes
+        state.splashes.forEach((s, idx) => {
+            s.x += s.vx * timeScale;
+            s.y += s.vy * timeScale;
+            s.vy += 0.2 * timeScale; // Gravity
+            s.life -= 0.02 * timeScale;
+            
+            if(s.y < h * 0.22 && s.vy > 0) s.y = h * 0.22; // Stay at water level
+            
+            ctx.globalAlpha = Math.max(0, s.life);
+            ctx.fillStyle = s.color;
+            ctx.beginPath(); ctx.arc(s.x, s.y, 2, 0, Math.PI*2); ctx.fill();
+            
+            if (s.life <= 0) state.splashes.splice(idx, 1);
+        });
+        ctx.globalAlpha = 1;
 
         // --- Boat & Fisherman ---
         ctx.save(); ctx.translate(boatX, boatY + Math.sin(timestamp*0.002)*2);
@@ -1146,9 +1183,8 @@
         drawCanvasUI(w, h, timestamp);
 
         for (let i = state.floatingTexts.length - 1; i >= 0; i--) {
-            const ft = state.floatingTexts[i]; ft.age++; ft.y -= 0.5;
+            const ft = state.floatingTexts[i]; ft.age += timeScale; ft.y -= 0.5 * timeScale;
             ctx.globalAlpha = Math.max(0, 1 - (ft.age / ft.life));
-            // Apply text outline for better visibility
             ctx.font = "bold 16px 'Nunito', sans-serif"; ctx.textAlign = "center";
             ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 3; ctx.strokeText(ft.text, ft.x, ft.y);
             ctx.fillStyle = ft.color; ctx.fillText(ft.text, ft.x, ft.y);
