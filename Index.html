@@ -221,11 +221,19 @@
                     <div id="shopBaitList" class="flex flex-col gap-3"></div>
                 </div>
 
+                <!-- Upgrades Section -->
                 <div class="w-full border-b-2 border-slate-600 pb-6">
                     <h3 class="text-sm font-black text-slate-300 mb-3 uppercase tracking-wider flex items-center gap-2"><i class="ph-bold ph-fishing-rod"></i> Pancingan</h3>
                     <div id="shopUpgradesList" class="flex flex-col gap-3"></div>
                 </div>
 
+                <!-- Accessories Section (NEW!) -->
+                <div class="w-full border-b-2 border-slate-600 pb-6">
+                    <h3 class="text-sm font-black text-slate-300 mb-3 uppercase tracking-wider flex items-center gap-2"><i class="ph-bold ph-toolbox"></i> Perlengkapan Tambahan</h3>
+                    <div id="shopAccessoriesList" class="flex flex-col gap-3"></div>
+                </div>
+
+                <!-- Coolers Section -->
                 <div class="w-full">
                     <h3 class="text-sm font-black text-slate-300 mb-3 uppercase tracking-wider flex items-center gap-2"><i class="ph-bold ph-snowflake"></i> Boks Es</h3>
                     <div id="shopCoolersList" class="flex flex-col gap-3"></div>
@@ -270,22 +278,22 @@
 </div>
 
 <script>
-    /** * MANCING MANIAAA * Pro Update Edition */
+    /** * MANCING MANIAAA * Pro Update Edition (Fixed & Polished) */
 
     const GAME_STATE = { IDLE: 0, POWER_METER: 1, CASTING: 2, WAITING: 3, FISHING: 4 };
-    const SAVE_KEY = 'mancingManiaSaveData_v3';
+    const SAVE_KEY = 'mancingManiaSaveData_v4';
 
     const state = {
         mode: GAME_STATE.IDLE, money: 0, xp: 0, level: 1, 
         isDay: true, isStorm: false, gameTime: 8 * 60, timeSpeed: 0.5, 
         ambientFish: [], particles: [], floatingTexts: [], inventory: [], logbook: {},
-        splashes: [], // Untuk cipratan air
+        splashes: [], accessories: [], // Item perlengkapan tambahan
         
         activeBait: null, isReeling: false, tension: 0, hookDepth: 0, targetDepth: 0, currentFish: null,
         directionalPull: null, pullTimer: 0, 
         powerMeter: 0, powerDir: 1,
         
-        sweetSpotPos: 40, sweetSpotDir: 1, // Posisi zona aman yang bergerak
+        sweetSpotPos: 40, sweetSpotDir: 1,
         
         currentLocation: 0,
         currentRodIndex: 0, highestRodOwned: 0, currentCoolerIndex: 0, highestCoolerOwned: 0,
@@ -326,7 +334,7 @@
             money: state.money, xp: state.xp, level: state.level, inventory: state.inventory, logbook: state.logbook,
             currentRodIndex: state.currentRodIndex, highestRodOwned: state.highestRodOwned,
             currentCoolerIndex: state.currentCoolerIndex, highestCoolerOwned: state.highestCoolerOwned,
-            activeBait: state.activeBait
+            activeBait: state.activeBait, accessories: state.accessories
         };
         localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     }
@@ -341,6 +349,7 @@
                 state.currentRodIndex = data.currentRodIndex || 0; state.highestRodOwned = data.highestRodOwned || 0;
                 state.currentCoolerIndex = data.currentCoolerIndex || 0; state.highestCoolerOwned = data.highestCoolerOwned || 0;
                 state.activeBait = data.activeBait || null;
+                state.accessories = data.accessories || [];
                 
                 state.stats.rodPower = RODS_DB[state.currentRodIndex].power;
                 state.stats.maxDepth = RODS_DB[state.currentRodIndex].depth;
@@ -351,7 +360,6 @@
         } else { updateTopUI(); }
     }
 
-    // Initialize plankton
     for(let i=0; i<40; i++) state.particles.push({ active: true, x: Math.random(), y: Math.random(), speed: 0.001 + Math.random() * 0.003, size: 1 + Math.random() * 2 });
 
     // --- Databases ---
@@ -379,6 +387,13 @@
         { id: "cacing", name: "Cacing Tanah", cost: 10, color: "text-orange-400", desc: "Mempercepat ikan menggigit umpan." },
         { id: "daging", name: "Daging Segar", cost: 50, color: "text-red-400", desc: "Meningkatkan peluang hiu & monster." },
         { id: "fosfor", name: "Umpan Fosfor", cost: 100, color: "text-purple-400", desc: "Menarik ikan langka malam." }
+    ];
+
+    // Penambahan Item Asesoris untuk Upgrade yang bermanfaat!
+    const ACCESSORIES_DB = [
+        { id: "lantern", name: "Lampu Petromaks", cost: 300, icon: "ph-lantern", desc: "Meningkatkan peluang ikan langka di malam hari." },
+        { id: "sonar", name: "Sonar Portabel", cost: 1000, icon: "ph-radar", desc: "Menurunkan lonjakan tarikan (erratic) ikan 50%." },
+        { id: "energy", name: "Minuman Energi", cost: 2500, icon: "ph-lightning", desc: "Menguras stamina ikan 2x lebih cepat saat ditarik." }
     ];
 
     const LOCATIONS_DB = [
@@ -689,6 +704,16 @@
                 <div class="flex-1 pr-2"><div class="flex items-center gap-2 mb-1"><div class="font-black text-[15px] leading-none text-slate-200" style="color:${rod.color!=='#1e293b'?rod.color:''}">${rod.name}</div><div class="text-[8px] uppercase font-black px-1.5 py-0.5 rounded-md border ${RARITY_STYLES[rod.rarity]}">${rod.rarity}</div></div><div class="text-[10px] text-gray-400 mb-1">${rod.desc}</div><div class="text-[9px] text-sky-200 bg-sky-900/50 inline-block px-1.5 py-0.5 rounded border border-sky-800/50">Kek: ${rod.power}x | Kedalaman: ${rod.depth}m</div></div>${btn}</div>`;
         });
 
+        // Accessories List (NEW)
+        const accList = document.getElementById('shopAccessoriesList'); accList.innerHTML = '';
+        ACCESSORIES_DB.forEach(acc => {
+            const isOwned = state.accessories.includes(acc.id); const canAfford = state.money >= acc.cost;
+            let btn = isOwned ? `<button class="bg-emerald-600/20 text-emerald-400 px-3 py-1.5 rounded-xl font-black text-xs border-2 border-emerald-500/50 cursor-default">DIMILIKI</button>`
+                      : `<button class="${canAfford?'bg-sky-500 active:bg-sky-600':'bg-slate-600 opacity-50'} text-white px-3 py-1.5 rounded-xl font-black text-xs buy-acc-btn" data-id="${acc.id}" ${!canAfford?'disabled':''}>${acc.cost} Koin</button>`;
+            accList.innerHTML += `<div class="bg-slate-800/80 p-3 rounded-xl border-2 ${isOwned?'border-emerald-500':'border-slate-600/50'} flex justify-between items-center shadow-inner">
+                <div class="flex-1 pr-2"><div class="font-black text-[14px] leading-none text-slate-200 mb-1 flex items-center gap-1"><i class="ph-bold ${acc.icon} text-sky-400"></i> ${acc.name}</div><div class="text-[10px] text-gray-400">${acc.desc}</div></div>${btn}</div>`;
+        });
+
         const colList = document.getElementById('shopCoolersList'); colList.innerHTML = '';
         COOLERS_DB.forEach((col, idx) => {
             const isOwned = idx <= state.highestCoolerOwned; const isEquipped = idx === state.currentCoolerIndex; const canAfford = state.money >= col.cost;
@@ -709,6 +734,10 @@
         }));
         document.querySelectorAll('.equip-rod-btn').forEach(b => b.addEventListener('click', e => {
             const idx = parseInt(e.currentTarget.dataset.idx); state.currentRodIndex = idx; state.stats.rodPower = RODS_DB[idx].power; state.stats.maxDepth = RODS_DB[idx].depth; playSfx('cast'); saveGame(); updateShopUI();
+        }));
+        document.querySelectorAll('.buy-acc-btn').forEach(b => b.addEventListener('click', e => {
+            const id = e.currentTarget.dataset.id; const acc = ACCESSORIES_DB.find(x => x.id === id);
+            if (state.money >= acc.cost) { state.money -= acc.cost; state.accessories.push(id); updateTopUI(); playSfx('catch'); saveGame(); updateShopUI(); }
         }));
         document.querySelectorAll('.buy-col-btn').forEach(b => b.addEventListener('click', e => {
             const idx = parseInt(e.currentTarget.dataset.idx); if (state.money >= COOLERS_DB[idx].cost) { state.money -= COOLERS_DB[idx].cost; state.highestCoolerOwned = idx; state.currentCoolerIndex = idx; state.stats.capacity = COOLERS_DB[idx].cap; updateTopUI(); playSfx('catch'); saveGame(); updateShopUI(); }
@@ -763,7 +792,7 @@
         
         const w = canvas.width / (window.devicePixelRatio||1); const h = canvas.height / (window.devicePixelRatio||1);
         const boatX = w * 0.5, rodTipLocalX = (w * 0.35) - boatX - 2;
-        createSplash(boatX + rodTipLocalX, h * 0.22, 15, '#38bdf8'); // Cipratan lemparan
+        createSplash(boatX + rodTipLocalX, h * 0.22, 15, '#38bdf8'); // Cipratan saat melempar
         playSfx('cast'); vibrate(40);
     }
 
@@ -777,7 +806,13 @@
         
         if (state.activeBait === 'daging') index = Math.min(pool.length - 1, index + 2); 
         else if (state.activeBait === 'fosfor' && !state.isDay) index = pool.length - 1; 
-        else if (state.isStorm && Math.random() > 0.5) index = Math.min(pool.length - 1, index + 1);
+        
+        // Item: Lampu Petromaks
+        if (state.accessories.includes('lantern') && !state.isDay && index < pool.length - 1) {
+            if (Math.random() > 0.5) index++;
+        }
+
+        if (state.isStorm && Math.random() > 0.5) index = Math.min(pool.length - 1, index + 1);
         else if (!state.isDay && state.hookDepth > 100 && Math.random() > 0.5) index = pool.length - 1;
 
         state.currentFish = { ...pool[index] };
@@ -844,11 +879,10 @@
         let fillColor = color; if (color === 'rainbow') { const h = (time * 0.1) % 360; fillColor = `hsl(${h}, 100%, 50%)`; }
         const grad = ctxRef.createLinearGradient(0, -20, 0, 20); 
         
-        // Memperbaiki pewarnaan ikan agar lebih cerah dan hidup
         if(color !== 'rainbow') { 
             grad.addColorStop(0, fillColor); 
             grad.addColorStop(0.6, fillColor); 
-            grad.addColorStop(1, '#e2e8f0'); // Perut ikan lebih terang agar pop out
+            grad.addColorStop(1, '#e2e8f0'); // Perut ikan lebih terang
         } else { 
             grad.addColorStop(0, fillColor); grad.addColorStop(1, '#ffffff'); 
         }
@@ -882,15 +916,16 @@
 
     function drawCanvasUI(w, h, timestamp) {
         if (state.mode === GAME_STATE.POWER_METER) {
-            const barW = 150, barH = 20, barX = w/2 - barW/2, barY = h * 0.15;
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.8)'; ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 10); ctx.fill();
+            // Dipindahkan ke tengah agar tidak menutupi UI atas
+            const barW = 200, barH = 24, barX = w/2 - barW/2, barY = h * 0.45;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.8)'; ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 12); ctx.fill();
             const powerW = barW * Math.abs(state.powerMeter);
             const pGrad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
             pGrad.addColorStop(0, '#34d399'); pGrad.addColorStop(0.5, '#fbbf24'); pGrad.addColorStop(1, '#ef4444');
-            ctx.fillStyle = pGrad; ctx.beginPath(); ctx.roundRect(barX, barY, powerW, barH, 10); ctx.fill();
+            ctx.fillStyle = pGrad; ctx.beginPath(); ctx.roundRect(barX, barY, powerW, barH, 12); ctx.fill();
             
-            ctx.fillStyle = 'white'; ctx.font = "bold 14px 'Nunito'"; ctx.textAlign = "center";
-            ctx.fillText("POWER CAST", w/2, barY - 10);
+            ctx.fillStyle = 'white'; ctx.font = "bold 16px 'Nunito'"; ctx.textAlign = "center";
+            ctx.fillText("POWER CAST", w/2, barY - 12);
         }
 
         if (state.mode === GAME_STATE.CASTING || state.mode === GAME_STATE.WAITING || state.mode === GAME_STATE.FISHING) {
@@ -910,12 +945,10 @@
             ctx.fillStyle = tGrad; ctx.beginPath(); ctx.roundRect(tX, tY + tH - fillH, tW, fillH, 6); ctx.fill();
             ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2; ctx.stroke();
             
-            // Dynamic Sweet Spot Zone Indicator
             const zoneHeight = (30 / 100) * tH;
             const zoneY = tY + tH - ((state.sweetSpotPos + 30) / 100) * tH;
             ctx.fillStyle = 'rgba(56, 189, 248, 0.4)'; ctx.fillRect(tX - 2, zoneY, tW + 4, zoneHeight);
 
-            // Draw Stamina Bar
             const sX = tX - 20, sY = tY + (tH*0.2), sW = 8, sH = tH * 0.8;
             ctx.fillStyle = 'rgba(15, 23, 42, 0.8)'; ctx.beginPath(); ctx.roundRect(sX, sY, sW, sH, 4); ctx.fill();
             const stamRatio = Math.max(0, f.currentStamina / f.stamina);
@@ -928,14 +961,14 @@
         }
     }
 
-    // --- Game Loop dengan Delta Time ---
+    // --- Game Loop ---
     let lastTime = 0;
 
     function gameLoop(timestamp) {
         if (!lastTime) lastTime = timestamp;
         let dt = timestamp - lastTime; lastTime = timestamp;
         
-        // Frame-rate independence (memastikan kecepatan konstan di layar 60hz vs 120hz)
+        // Frame-rate independence
         let timeScale = dt / 16.666;
         if (timeScale > 3) timeScale = 3; 
         if (timeScale < 0.1) timeScale = 0.1;
@@ -948,26 +981,24 @@
 
         const w = canvas.width / (window.devicePixelRatio||1); const h = canvas.height / (window.devicePixelRatio||1);
 
-        // Ambient Fish
-        if (Math.random() < 0.015 * timeScale && state.ambientFish.length < 15) {
+        // --- Perbaikan Animasi Ambient Fish ---
+        // Selalu tampilkan warna cerah pada ikan yang berenang
+        if (Math.random() < 0.015 * timeScale && state.ambientFish.length < 20) {
             const isLeft = Math.random() > 0.5;
             let fishTypes = ['standard', 'long', 'round']; 
             let colors = ['#ef4444', '#f97316', '#facc15', '#4ade80', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#ffffff'];
             
-            if (state.currentLocation >= 2) { 
-                fishTypes.push('shark', 'eel', 'squid', 'angler'); 
-                if (!state.isDay) colors.push('#111827', '#be123c', '#4c1d95'); 
-            }
-
-            let f = state.ambientFish.find(af => !af.active);
-            if (!f) { f = {}; state.ambientFish.push(f); }
-            f.active = true; f.x = (isLeft ? -50 : w + 50) + (Math.random()*30 - 15);
-            f.y = h * 0.3 + Math.random() * (h * 0.5) + (Math.random()*20 - 10);
-            f.speed = (0.1 + Math.random() * 0.3) * (isLeft ? 1 : -1);
-            f.size = 10 + Math.random() * 15; 
-            f.color = colors[Math.floor(Math.random()*colors.length)];
-            f.shape = fishTypes[Math.floor(Math.random()*fishTypes.length)];
-            f.id = Math.random();
+            if (state.currentLocation >= 2) fishTypes.push('shark', 'eel', 'squid', 'angler'); 
+            
+            state.ambientFish.push({
+                x: (isLeft ? -50 : w + 50) + (Math.random()*30 - 15),
+                y: h * 0.3 + Math.random() * (h * 0.5) + (Math.random()*20 - 10),
+                speed: (0.1 + Math.random() * 0.3) * (isLeft ? 1 : -1),
+                size: 10 + Math.random() * 15, 
+                color: colors[Math.floor(Math.random()*colors.length)],
+                shape: fishTypes[Math.floor(Math.random()*fishTypes.length)],
+                id: Math.random()
+            });
         }
 
         if(timestamp % 60 < 16) {
@@ -1011,7 +1042,6 @@
         } else if (state.mode === GAME_STATE.FISHING) {
             const f = state.currentFish;
             
-            // Dynamic Sweet Spot Logic
             state.sweetSpotPos += (0.2 + f.erratic) * state.sweetSpotDir * timeScale;
             if (state.sweetSpotPos > 60 || state.sweetSpotPos < 10) state.sweetSpotDir *= -1;
 
@@ -1019,13 +1049,18 @@
             const reelMultiplier = inSweetSpot ? 1.5 : 1;
             
             if (state.isReeling && inSweetSpot) {
-                f.currentStamina -= 0.5 * timeScale;
-                if(Math.random() < 0.05 * timeScale) { spawnText("-5 Stamina", hookX + (Math.random()*40-20), hookY - 20, "#facc15"); }
+                // Item: Minuman Energi = stamina musuh lebih cepat habis
+                let staminaDrain = state.accessories.includes("energy") ? 1.0 : 0.5;
+                f.currentStamina -= staminaDrain * timeScale;
+                if(Math.random() < 0.05 * timeScale) { spawnText(`-${staminaDrain*10} Stamina`, hookX + (Math.random()*40-20), hookY - 20, "#facc15"); }
             }
             
             const exhausted = f.currentStamina <= 0;
             const pForce = exhausted ? 0.1 : f.pullForce;
-            const errMod = exhausted ? 0 : f.erratic;
+            
+            // Item: Sonar = erratic berkurang
+            let errMod = exhausted ? 0 : f.erratic;
+            if (state.accessories.includes("sonar")) errMod *= 0.5;
 
             if (!exhausted && !state.directionalPull && f.mass >= 20 && Math.random() < 0.005 * timeScale) {
                 state.directionalPull = Math.random() > 0.5 ? 'KIRI' : 'KANAN'; state.pullTimer = 100;
@@ -1052,7 +1087,7 @@
 
             if (Math.random() < errMod * timeScale) { 
                 state.tension += f.spike; container.classList.add('shake'); setTimeout(() => container.classList.remove('shake'), 50); 
-                createSplash(hookX, h * 0.22, 5, '#ffffff'); // Cipratan saat ikan meronta
+                createSplash(hookX, h * 0.22, 5, '#ffffff'); 
             }
             state.tension = Math.max(0, state.tension);
             
@@ -1076,23 +1111,25 @@
         }
 
         state.particles.forEach(p => {
-            if (!p.active) return;
             p.y -= p.speed * h * timeScale; if(p.y < h * 0.22) { p.y = h; p.x = Math.random(); }
             ctx.fillStyle = state.isDay && !state.isStorm ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)';
             ctx.beginPath(); ctx.arc(p.x * w, p.y, p.size, 0, Math.PI*2); ctx.fill();
         });
 
-        state.ambientFish.forEach(f => {
-            if (!f.active) return;
-            f.x += f.speed * timeScale; if (f.x < -100 || f.x > w + 100) { f.active = false; return; }
-            const sprite = getFishSprite(f.type, f.color, f.shape);
+        // Rendering Ikan Background (Sudah Diperbaiki!)
+        for (let i = state.ambientFish.length - 1; i >= 0; i--) {
+            const f = state.ambientFish[i];
+            f.x += f.speed * timeScale;
+            if (f.x < -100 || f.x > w + 100) { state.ambientFish.splice(i, 1); continue; }
+            
+            const sprite = getFishSprite(f.shape, f.color, f.shape);
             ctx.save(); ctx.translate(f.x, f.y + Math.sin(f.x*0.05 + timestamp*0.002)*10);
             if (f.speed < 0) ctx.scale(-1, 1);
             const scale = f.size / 15; ctx.scale(scale, scale);
             ctx.rotate(Math.sin(timestamp * 0.005 + f.id) * 0.1);
             ctx.drawImage(sprite, -60, -60);
             ctx.restore();
-        });
+        }
 
         if (state.isStorm) {
             ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1.5; ctx.beginPath();
@@ -1105,17 +1142,13 @@
 
         // Render Water Splashes
         state.splashes.forEach((s, idx) => {
-            s.x += s.vx * timeScale;
-            s.y += s.vy * timeScale;
-            s.vy += 0.2 * timeScale; // Gravity
-            s.life -= 0.02 * timeScale;
-            
-            if(s.y < h * 0.22 && s.vy > 0) s.y = h * 0.22; // Stay at water level
+            s.x += s.vx * timeScale; s.y += s.vy * timeScale;
+            s.vy += 0.2 * timeScale; s.life -= 0.02 * timeScale;
+            if(s.y < h * 0.22 && s.vy > 0) s.y = h * 0.22; 
             
             ctx.globalAlpha = Math.max(0, s.life);
             ctx.fillStyle = s.color;
             ctx.beginPath(); ctx.arc(s.x, s.y, 2, 0, Math.PI*2); ctx.fill();
-            
             if (s.life <= 0) state.splashes.splice(idx, 1);
         });
         ctx.globalAlpha = 1;
