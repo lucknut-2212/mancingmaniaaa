@@ -1,75 +1,65 @@
 🎣 Mancing Maniaaa
 
-Mancing Maniaaa adalah game simulasi memancing berbasis web yang santai namun menantang. Jelajahi lautan, tingkatkan alat pancingmu, dan tangkap berbagai spesies ikan legendaris dari dermaga dangkal hingga palung terdalam!
+Mancing Maniaaa adalah game memancing interaktif berbasis web (HTML5 Canvas) yang sangat dioptimalkan untuk perangkat mobile. Rasakan sensasi memancing yang realistis dengan mekanik tarik-ulur (reeling), siklus siang-malam, cuaca dinamis, dan puluhan jenis ikan unik mulai dari ikan badut hingga monster laut dalam legendaris!
 
-Created by: LUCKNUTGAMING
+✨ Fitur Utama
 
-🌊 Fitur Utama
+Mekanik Memancing Dinamis (Tension & Stamina): Jaga indikator tarikan (tension) di area aman (sweet spot) untuk menguras stamina ikan tanpa memutuskan tali pancing.
 
-Sistem Memancing Dinamis: Mekanisme tension (tegangan tali) dan stamina ikan yang menantang. Kamu harus menjaga tegangan di "Sweet Spot" untuk menarik ikan lebih cepat.
+Interaksi Swipe-to-Counter: Ikan buas dan monster legendaris akan menarik kail ke kiri atau kanan. Pemain harus melakukan swipe di layar ke arah sebaliknya untuk melawan!
 
-Siklus Waktu & Cuaca: Perubahan Siang/Malam secara real-time dan sistem cuaca Badai yang mempengaruhi jenis ikan yang muncul serta kesulitan memancing.
+Haptic Feedback: Dukungan getaran (vibration) di perangkat mobile saat melempar kail, saat ikan menyambar, dan saat tali putus untuk pengalaman yang lebih imersif.
 
-Upgrade Peralatan: * Pancingan: Dari Bambu Biasa hingga Leviathan Bulan.
+Sistem Progresi (Level & XP): Tangkap ikan untuk mendapatkan XP dan naikkan level karaktermu dari Pemula hingga menjadi Legenda Laut.
 
-Boks Es (Cooler): Tingkatkan kapasitas penyimpanan ikanmu.
+4 Bioma / Lokasi Unik: Buka lokasi baru seiring naiknya levelmu:
 
-Umpan (Bait): Gunakan Cacing, Daging, atau Umpan Fosfor untuk menarik ikan tertentu.
+Dermaga Tropis (Lvl 1)
 
-Eksplorasi Lokasi: Buka lokasi baru seperti Palung Mariana setelah mencapai target kedalaman tertentu.
+Terumbu Karang (Lvl 3)
 
-Jurnal Ikan (Logbook): Catat semua spesies yang pernah kamu tangkap dan pecahkan rekor berat maksimumnya.
+Bangkai Kapal (Lvl 6)
 
-Sistem Misi (Quest): Selesaikan tugas harian untuk mendapatkan bonus koin.
+Palung Mariana (Lvl 10)
 
-Grafik Vector Canvas: Animasi ikan dan lingkungan yang diproses secara prosedural melalui HTML5 Canvas.
+Toko Perlengkapan (Shop): Jual hasil tangkapanmu dan beli pancingan baru yang lebih kuat, boks es yang lebih besar, serta berbagai jenis umpan (Cacing, Daging, Fosfor).
 
-🎮 Cara Bermain
+Jurnal Ikan (Logbook): Lacak setiap spesies ikan yang berhasil kamu tangkap beserta rekor berat maksimalnya.
 
-Melempar Umpan: Klik tombol LEMPAR untuk memulai. Kedalaman lemparan akan ditentukan secara otomatis.
+Siklus Waktu & Cuaca: Transisi siang dan malam yang mulus, serta event badai acak yang mempengaruhi peluang munculnya ikan langka.
 
-Menunggu Gigitan: Perhatikan pergerakan pelampung atau getaran pada pancingan.
+Audio Prosedural: Efek suara dan musik ambien (ombak, jangkrik, hujan) yang di-generate langsung menggunakan Web Audio API.
 
-Menarik Ikan (Reeling): * Tahan tombol TARIK untuk menggulung senar.
+🚀 Cara Bermain
 
-Penting: Jaga indikator Tension (kanan) agar tetap berada di area tengah (hijau/kuning). Jika terlalu merah (100%), tali akan putus!
+Lempar Kail: Ketuk tombol LEMPAR untuk memulai pengukur kekuatan (Power Meter). Ketuk lagi untuk melempar kail sesuai kedalaman yang diinginkan.
 
-Jika muncul peringatan ARAH (KIRI/KANAN), segera lepas tarikan atau sesuaikan agar ikan tidak kabur.
+Tunggu Gigitan: Ujung pancingan akan bergetar saat ada ikan yang mendekat.
 
-Menjual Hasil Tangkapan: Pergi ke Toko untuk menjual isi Boks Es milikmu dan mendapatkan koin.
+Tarik (Reel): Tahan tombol TARIK saat ikan memakan umpan.
 
-Upgrade: Gunakan koin untuk membeli pancingan yang lebih kuat agar bisa menjangkau laut yang lebih dalam.
+Jaga Tarikan: Perhatikan bar merah di sebelah kanan. Jangan biarkan bar penuh hingga menyentuh tanda seru (!), atau tali akan putus! Lepas tombol untuk mengendurkan tali.
 
-🛠️ Detail Teknis
+Perhatikan Arah: Jika muncul peringatan "SWIPE KE KANAN/KIRI", segera swipe layar ke arah tersebut untuk menggagalkan perlawanan ikan buas.
 
-Game ini dibangun menggunakan teknologi web modern tanpa memerlukan engine eksternal yang berat:
+🛠️ Instalasi & Menjalankan Game
 
-Engine: HTML5 Canvas (2D Context).
+Game ini dibuat dengan Vanilla JavaScript dan murni menggunakan satu file HTML (Single-File Application) tanpa ketergantungan bundler atau server backend.
 
-Styling: Tailwind CSS untuk UI yang responsif.
+Clone atau unduh repositori ini.
 
-Icons: Phosphor Icons.
+Buka file Index.html langsung menggunakan browser modern (Chrome, Safari, Edge, Firefox).
 
-State Management: JavaScript Object (Vanilla JS).
+Selesai! Game siap dimainkan.
 
-Storage: localStorage untuk menyimpan progres permainan (Koin, Inventori, Jurnal, dan Upgrade).
+(Catatan: Untuk pengalaman terbaik, mainkan melalui perangkat mobile atau gunakan mode Inspect Element (F12) -> Device Toolbar di browser desktop Anda untuk mensimulasikan layar sentuh).
 
-Audio: Web Audio API untuk musik ambient dinamis dan efek suara sintetis.
+☕ Dukung Kreator
 
-📦 Instalasi & Penggunaan
+Suka dengan game ini? Kamu bisa mendukung pengembangan lebih lanjut dengan membelikan kreator kopi melalui Saweria!
 
-Game ini bersifat standalone (satu file tunggal). Cukup buka file Index.html di browser modern apa pun (Chrome, Edge, Safari, atau Firefox).
+📜 Lisensi & Kredit
 
-Download file Index.html.
+Game ini dikembangkan menggunakan Canvas API bawaan HTML5 dan menggunakan Phosphor Icons untuk grafis ikon UI.
 
-Klik kanan dan pilih Open with Browser.
-
-Selamat memancing!
-
-🧡 Dukung Kreator
-
-Jika kamu menyukai game ini, dukung pengembangan lebih lanjut melalui:
-
-Saweria: Klik di sini untuk Donasi (Atau scan QR Code di dalam game).
-
-© 2024 LUCKNUTGAMING. All Rights Reserved.
+Created with ❤️ by Lucknut Gaming
