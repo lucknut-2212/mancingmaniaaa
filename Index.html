@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mancing Maniaaa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            touch-action: none; user-select: none; -webkit-user-select: none;
+            background-color: #0f172a; display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; overflow: hidden; font-family: 'Nunito', sans-serif;
+        }
+
+        #game-container {
+            position: relative; width: 100%; height: 100dvh; max-width: 420px; max-height: 900px;
+            background-color: #0284c7; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            transition: background-color 2s ease-in-out, transform 0.05s ease-in-out;
+        }
+        #game-container.night { background-color: #0f172a; }
+        #game-container.storm { background-color: #334155; }
+        #game-container.storm.night { background-color: #020617; }
+        #game-container.shake { transform: translate(4px, 4px) rotate(0.5deg); }
+        #game-container.shake-heavy { animation: shake-hard 0.1s infinite; }
+
+        @keyframes shake-hard {
+            0% { transform: translate(8px, 8px) rotate(1deg); }
+            50% { transform: translate(-8px, -8px) rotate(-1deg); }
+            100% { transform: translate(8px, 8px) rotate(1deg); }
+        }
+
+        .tension-fill { background: linear-gradient(to top, #34d399 0%, #fbbf24 60%, #ef4444 90%); transition: height 0.1s linear; }
+        .stamina-fill { background: linear-gradient(to top, #fef08a 0%, #eab308 100%); transition: height 0.1s linear; }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .anim-pulse { animation: pulse-ring 1s infinite; }
+
+        /* Boat Swing Effect for Home Screen */
+        @keyframes boat-swing {
+            0% { transform: rotate(-8deg) translateY(0); }
+            50% { transform: rotate(0deg) translateY(-15px); }
+            100% { transform: rotate(8deg) translateY(0); }
+        }
+        .anim-swing { animation: boat-swing 4s ease-in-out infinite alternate; transform-origin: bottom center; }
+
+        .modal-overlay { transition: opacity 0.3s ease-out, visibility 0.3s; opacity: 0; visibility: hidden; pointer-events: none; }
+        .modal-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
+        .modal-content { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: scale(0.9); }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+        canvas { display: block; width: 100%; height: 100%; }
+        #introScreen { transition: opacity 0.8s ease-in-out; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Watermark Signature -->
+    <div class="absolute top-4 left-1/2 -translate-x-1/2 text-white/30 text-[10px] font-black z-0 pointer-events-none tracking-widest uppercase drop-shadow-md">LUCKNUTGAMING</div>
+
+    <!-- Intro Screen -->
+    <div id="introScreen" class="absolute inset-0 bg-[#0f172a] z-50 flex flex-col items-center justify-center pointer-events-auto overflow-hidden">
+        
+        <!-- Epic Graphic Composition with SWING Animation -->
+        <div class="relative w-64 h-64 bg-sky-900/30 rounded-full flex items-center justify-center border-4 border-sky-500/30 mb-8 shadow-[0_0_50px_rgba(2,132,199,0.5)] anim-swing">
+            <i class="ph-fill ph-fish-simple text-9xl text-sky-400 absolute -bottom-4 right-4 -rotate-45 transform drop-shadow-[0_0_15px_rgba(56,189,248,0.5)]"></i>
+            <i class="ph-fill ph-sailboat text-5xl text-slate-300 absolute top-10 left-6"></i>
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 256 256">
+                <path d="M 80 80 Q 150 20 200 180" fill="transparent" stroke="#e2e8f0" stroke-width="3" stroke-dasharray="6,6" />
+                <circle cx="200" cy="180" r="6" fill="#ef4444" />
+            </svg>
+        </div>
+
+        <h1 class="text-5xl font-black text-white mb-2 tracking-widest drop-shadow-lg text-center leading-tight">MANCING<br><span class="text-sky-400">MANIAAA</span></h1>
+        <p class="text-slate-400 mb-8 max-w-xs text-center text-sm font-medium leading-relaxed">Lempar pancingmu ke laut dalam. Tangkap ikan legendaris, tingkatkan alatmu, dan hadapi badai.</p>
+        
+        <div class="flex flex-col gap-3 w-full px-12">
+            <button id="startBtn" class="bg-emerald-500 active:bg-emerald-600 text-white py-4 rounded-3xl font-black text-xl shadow-[0_6px_0_#065f46] active:shadow-none active:translate-y-[6px] transition-all tracking-widest w-full">MAIN SEKARANG</button>
+            <button onclick="openModal('donasiModal')" class="bg-[#1e293b] text-orange-400 py-3 rounded-3xl font-bold text-sm border-2 border-orange-500/50 shadow-lg active:translate-y-1 transition-all w-full flex items-center justify-center gap-2">
+                <i class="ph-bold ph-coffee text-xl"></i> DUKUNG CREATOR
+            </button>
+        </div>
+        
+        <div class="absolute bottom-6 text-slate-600 font-bold tracking-[0.3em] text-xs">CREATED BY LUCKNUTGAMING</div>
+    </div>
+
+    <!-- Top UI Bar -->
+    <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-10 pointer-events-none mt-4">
+        <div class="bg-[#1e293b] text-white pl-2 pr-4 py-1.5 rounded-2xl flex items-center gap-2 pointer-events-auto shadow-lg border-b-4 border-black/20">
+            <div class="bg-yellow-600/20 p-1.5 rounded-xl"><i class="ph-fill ph-coins text-yellow-500 text-lg"></i></div>
+            <span class="text-base font-black tracking-wide" id="moneyDisplay">0 Koin</span>
+        </div>
+        
+        <div class="flex flex-row items-center gap-2 pointer-events-auto">
+            <button onclick="openModal('donasiModal')" class="bg-[#1e293b] text-orange-400 p-2 rounded-2xl shadow-lg border-b-4 border-black/20 active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center">
+                <i class="ph-bold ph-coffee text-lg"></i>
+            </button>
+            <button id="audioBtn" class="bg-[#1e293b] text-teal-400 p-2 rounded-2xl shadow-lg border-b-4 border-black/20 active:translate-y-1 active:border-b-0 transition-all">
+                <i class="ph-bold ph-speaker-high text-lg" id="audioIcon"></i>
+            </button>
+            <div id="timeDisplay" class="bg-[#fef3c7] text-[#b45309] px-3 py-2 rounded-2xl text-[10px] font-black tracking-widest uppercase shadow-lg border-b-4 border-black/10 flex items-center gap-1.5 transition-colors duration-1000">
+                <i class="ph-bold ph-sun text-base" id="timeIcon"></i> <span id="timeText">SIANG</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tension & Stamina UI -->
+    <div id="tensionUI" class="absolute right-16 top-1/2 -translate-y-1/2 flex gap-2 hidden z-10 pointer-events-none">
+        <!-- Stamina Bar -->
+        <div class="h-56 w-3 bg-[#1e293b]/80 rounded-full border-2 border-[#0f172a] flex-col justify-end p-0.5 overflow-hidden shadow-xl flex">
+            <div class="w-full h-[100%] stamina-fill rounded-full" id="staminaBar"></div>
+        </div>
+        <!-- Tension Bar -->
+        <div class="h-64 w-6 bg-[#1e293b] rounded-full border-4 border-[#0f172a] flex-col justify-end p-0.5 overflow-hidden shadow-xl relative flex">
+            <div class="absolute w-full bg-sky-400/30 border-y-2 border-sky-300/80 z-20 shadow-[0_0_10px_#38bdf8]" style="bottom: 40%; height: 30%; left:0;"></div>
+            <div class="w-full h-[50%] tension-fill rounded-full rounded-b-sm z-10" id="tensionBar"></div>
+            <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-center text-xl text-red-500 font-bold animate-pulse hidden z-30" id="tensionWarning">
+                <i class="ph-fill ph-warning-circle"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Depth Gauge -->
+    <div id="depthUI" class="absolute right-6 top-1/4 h-1/2 w-3 bg-[#1e293b]/80 backdrop-blur-sm rounded-full border-2 border-[#0f172a] hidden z-10 pointer-events-none shadow-xl">
+        <div id="depthIndicator" class="absolute left-1/2 -translate-x-1/2 w-8 h-8 bg-sky-500 rounded-full border-4 border-white flex items-center justify-center transition-all duration-75 shadow-lg" style="top: 0%;">
+            <i class="ph-bold ph-anchor text-sm text-white"></i>
+        </div>
+        <div id="maxDepthText" class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white font-black bg-black/50 px-2 py-0.5 rounded shadow">150m</div>
+    </div>
+
+    <!-- Event Notifications -->
+    <div id="eventNotification" class="absolute top-24 left-1/2 -translate-x-1/2 bg-red-600/90 text-white px-6 py-2 rounded-full font-black tracking-widest uppercase shadow-lg border-2 border-red-400/50 transition-all duration-500 transform -translate-y-20 opacity-0 z-20 pointer-events-none flex items-center gap-2 text-sm">
+        <i class="ph-bold ph-cloud-lightning text-xl" id="eventNotifIcon"></i> <span id="eventNotifText">BADAI DATANG!</span>
+    </div>
+
+    <!-- Directional Pull Warning -->
+    <div id="dirWarning" class="absolute top-1/3 left-1/2 -translate-x-1/2 text-red-500 font-black text-4xl drop-shadow-[0_0_15px_rgba(239,68,68,0.8)] opacity-0 transition-opacity z-20 pointer-events-none text-center leading-none flex flex-col items-center">
+        <i id="dirIcon" class="ph-bold ph-arrow-fat-lines-left text-6xl animate-pulse"></i>
+        <span class="text-xl mt-2 tracking-widest bg-black/50 px-3 py-1 rounded-lg">LEPAS TARIKAN!</span>
+    </div>
+
+    <!-- Modals -->
+    <!-- Donasi Modal (Saweria QR) -->
+    <div id="donasiModal" class="modal-overlay absolute inset-0 bg-black/80 z-50 flex flex-col justify-center items-center p-6 text-center backdrop-blur-md">
+        <div class="modal-content flex flex-col items-center w-full max-w-sm bg-[#1e293b] p-6 rounded-3xl border-[3px] border-[#b45309]">
+            <h2 class="text-2xl font-black text-[#f97316] mb-2 uppercase tracking-widest flex items-center gap-2"><i class="ph-bold ph-coffee"></i> Support Creator</h2>
+            <p class="text-slate-300 mb-6 text-sm font-medium leading-relaxed">Suka dengan gamenya? Dukung LucknutGaming melalui Saweria!</p>
+            <div class="bg-white w-full p-4 rounded-2xl shadow-xl mb-6 flex justify-center">
+                <img src="https://i.ibb.co.com/LXcHhSqK/image-8c3f98.png" alt="Saweria QR Code" class="w-full max-w-[220px] rounded-xl object-contain">
+            </div>
+            <button onclick="closeModal('donasiModal')" class="bg-[#475569] active:bg-[#334155] text-white px-8 py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#0f172a] active:translate-y-[6px] active:shadow-none w-full transition-all tracking-wide">TUTUP</button>
+        </div>
+    </div>
+
+    <!-- Lore/Fish Detail Modal -->
+    <div id="loreModal" class="modal-overlay absolute inset-0 bg-black/90 z-50 flex flex-col justify-center items-center p-6 text-center backdrop-blur-md">
+        <div class="modal-content flex flex-col items-center w-full max-w-sm bg-[#1e293b] p-6 rounded-3xl border-4 border-sky-500/50">
+            <canvas id="loreVisual" width="160" height="160" class="w-40 h-40 rounded-3xl bg-sky-900/50 mb-4 shadow-2xl border-4 border-white/20"></canvas>
+            <h2 id="loreTitle" class="text-3xl font-black text-white mb-1 uppercase tracking-widest drop-shadow-lg">Nama Ikan</h2>
+            <p id="loreSubtitle" class="text-emerald-400 text-xs font-bold tracking-widest uppercase mb-4 bg-emerald-900/30 px-3 py-1 rounded-lg">Rekor: 0 kg</p>
+            <p id="loreDesc" class="text-slate-300 mb-6 text-sm text-left italic bg-slate-800 p-4 rounded-xl shadow-inner leading-relaxed">Deskripsi ikan...</p>
+            <button onclick="closeModal('loreModal')" class="bg-blue-500 active:bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-lg shadow-[0_6px_0_#1e3a8a] active:translate-y-[6px] active:shadow-none w-full transition-all tracking-wide">KEMBALI</button>
+        </div>
+    </div>
+
+    <!-- Catch Modal -->
+    <div id="messageModal" class="modal-overlay absolute inset-0 bg-black/80 z-50 flex flex-col justify-center items-center p-6 text-center backdrop-blur-sm">
+        <div class="modal-content flex flex-col items-center w-full max-w-sm">
+            <h2 id="modalTitle" class="text-4xl font-black text-white mb-2 uppercase tracking-widest drop-shadow-lg">DAPAT!</h2>
+            <p id="modalDesc" class="text-gray-300 mb-6 font-medium bg-black/40 px-4 py-2 rounded-xl">Kamu berhasil menangkap sesuatu.</p>
+            <canvas id="modalVisual" width="160" height="160" class="w-40 h-40 rounded-3xl bg-sky-900/50 mb-8 shadow-2xl border-4 border-white/20"></canvas>
+            <button id="modalBtn" class="bg-blue-500 active:bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-xl shadow-[0_6px_0_#1e3a8a] active:shadow-[0_0px_0_#1e3a8a] active:translate-y-[6px] w-full transition-all tracking-wide">LANJUT</button>
+        </div>
+    </div>
+
+    <!-- Cooler Modal -->
+    <div id="coolerModal" class="modal-overlay absolute inset-0 bg-[#0f172a]/95 z-40 flex flex-col items-center p-6 backdrop-blur-md">
+        <div class="modal-content w-full h-full max-w-md flex flex-col items-center pt-8 pb-4">
+            <h2 class="text-3xl font-black text-sky-400 mb-4 uppercase tracking-widest flex items-center gap-2"><i class="ph-bold ph-box"></i> Boks Es</h2>
+            <div id="coolerList" class="w-full bg-[#1e293b] rounded-3xl border-4 border-[#334155] p-4 flex-1 overflow-y-auto flex flex-col gap-3 mb-6 shadow-inner relative"></div>
+            <button id="closeCoolerBtn" class="bg-slate-600 active:bg-slate-700 text-white px-8 py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#334155] active:shadow-[0_0px_0_#334155] active:translate-y-[6px] w-full transition-all tracking-widest">TUTUP</button>
+        </div>
+    </div>
+
+    <!-- Logbook Modal -->
+    <div id="logbookModal" class="modal-overlay absolute inset-0 bg-[#0f172a]/95 z-40 flex flex-col items-center p-6 backdrop-blur-md">
+        <div class="modal-content w-full h-full max-w-md flex flex-col items-center pt-8 pb-4">
+            <h2 class="text-3xl font-black text-purple-400 mb-2 uppercase tracking-widest flex items-center gap-2"><i class="ph-bold ph-book-open-text"></i> Jurnal</h2>
+            <p class="text-sm text-slate-400 font-medium mb-4" id="logbookProgress">0 / 0 Ditemukan</p>
+            <div class="w-full bg-[#1e293b] rounded-3xl border-4 border-[#334155] p-4 flex-1 overflow-y-auto mb-6 shadow-inner">
+                <div id="logbookGrid" class="grid grid-cols-3 gap-3"></div>
+            </div>
+            <button id="closeLogbookBtn" class="bg-slate-600 active:bg-slate-700 text-white px-8 py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#334155] active:shadow-[0_0px_0_#334155] active:translate-y-[6px] w-full transition-all tracking-widest">TUTUP</button>
+        </div>
+    </div>
+
+    <!-- Map & Quest Modal (Gabungan) -->
+    <div id="mapModal" class="modal-overlay absolute inset-0 bg-[#0f172a]/95 z-40 flex flex-col items-center p-6 backdrop-blur-md">
+        <div class="modal-content w-full h-full max-w-md flex flex-col items-center pt-8 pb-4">
+            <h2 class="text-3xl font-black text-amber-400 mb-4 uppercase tracking-widest flex items-center gap-2"><i class="ph-bold ph-map-trifold"></i> Peta & Misi</h2>
+            <div class="w-full bg-[#1e293b] rounded-3xl border-4 border-[#334155] p-5 flex-1 overflow-y-auto flex flex-col gap-6 mb-6 shadow-inner">
+                
+                <!-- Misi Section -->
+                <div class="bg-slate-800/80 p-4 rounded-2xl border-2 border-slate-600">
+                    <h3 class="text-sm font-black text-slate-300 mb-2 uppercase tracking-wider flex items-center gap-2"><i class="ph-bold ph-scroll"></i> Misi Saat Ini</h3>
+                    <div id="questContainer" class="text-center">
+                        <div class="text-sky-300 font-bold mb-1" id="questDesc">Tangkap 3 Ikan Apa Saja</div>
+                        <div class="w-full bg-slate-900 rounded-full h-3 mb-2"><div id="questBar" class="bg-amber-400 h-3 rounded-full" style="width: 0%"></div></div>
+                        <div class="text-xs text-slate-400 font-bold" id="questProg">0 / 3</div>
+                        <button id="claimQuestBtn" class="mt-3 bg-amber-500 text-white px-4 py-2 rounded-xl font-bold text-sm w-full hidden shadow-[0_4px_0_#b45309] active:translate-y-[4px] active:shadow-none transition-all">KLAIM HADIAH (100 Koin)</button>
+                    </div>
+                </div>
+
+                <!-- Lokasi Section -->
+                <div>
+                    <h3 class="text-sm font-black text-slate-300 mb-3 uppercase tracking-wider flex items-center gap-2"><i class="ph-bold ph-map-pin"></i> Lokasi Memancing</h3>
+                    <div id="locationList" class="flex flex-col gap-3"></div>
+                </div>
+
+            </div>
+            <button onclick="closeModal('mapModal')" class="bg-slate-600 active:bg-slate-700 text-white px-8 py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#334155] active:shadow-[0_0px_0_#334155] active:translate-y-[6px] w-full transition-all tracking-widest">KEMBALI</button>
+        </div>
+    </div>
+
+    <!-- Shop Modal -->
+    <div id="shopModal" class="modal-overlay absolute inset-0 bg-[#0f172a]/95 z-40 flex flex-col items-center p-6 backdrop-blur-md">
+        <div class="modal-content w-full h-full max-w-md flex flex-col items-center pt-8 pb-4">
+            <h2 class="text-3xl font-black text-emerald-400 mb-4 uppercase tracking-widest flex items-center gap-2"><i class="ph-bold ph-shopping-bag"></i> Toko</h2>
+            <div class="w-full bg-[#1e293b] rounded-3xl border-4 border-[#334155] p-5 flex-1 overflow-y-auto flex flex-col gap-6 mb-6 shadow-inner">
+                
+                <div class="w-full border-b-2 border-slate-600 pb-6 flex flex-col gap-3">
+                    <button id="sellAllBtn" class="bg-emerald-500 active:bg-emerald-600 text-white px-5 py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#065f46] active:translate-y-[6px] active:shadow-none w-full transition-all flex justify-between items-center">
+                        <span class="flex items-center gap-2"><i class="ph-bold ph-currency-dollar"></i> JUAL SEMUA</span>
+                        <span id="sellValueDisplay" class="font-mono text-emerald-100">0 Koin</span>
+                    </button>
+                </div>
+
+                <!-- Bait Section -->
+                <div class="w-full border-b-2 border-slate-600 pb-6">
+                    <h3 class="text-sm font-black text-slate-300 mb-3 uppercase tracking-wider flex items-center gap-2"><i class="ph-bold ph-bug"></i> Umpan</h3>
+                    <div id="shopBaitList" class="flex flex-col gap-3"></div>
+                </div>
+
+                <div class="w-full border-b-2 border-slate-600 pb-6">
+                    <h3 class="text-sm font-black text-slate-300 mb-3 uppercase tracking-wider flex items-center gap-2"><i class="ph-bold ph-fishing-rod"></i> Pancingan</h3>
+                    <div id="shopUpgradesList" class="flex flex-col gap-3"></div>
+                </div>
+
+                <div class="w-full">
+                    <h3 class="text-sm font-black text-slate-300 mb-3 uppercase tracking-wider flex items-center gap-2"><i class="ph-bold ph-snowflake"></i> Boks Es</h3>
+                    <div id="shopCoolersList" class="flex flex-col gap-3"></div>
+                </div>
+
+            </div>
+            <button id="closeShopBtn" class="bg-slate-600 active:bg-slate-700 text-white px-8 py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#334155] active:shadow-[0_0px_0_#334155] active:translate-y-[6px] w-full transition-all tracking-widest">KEMBALI</button>
+        </div>
+    </div>
+
+    <!-- Bottom UI -->
+    <div class="absolute bottom-0 left-0 w-full p-6 flex justify-between items-end z-20 pointer-events-none">
+        
+        <!-- Menus (2x2 Grid) -->
+        <div class="grid grid-cols-2 gap-2 pointer-events-auto">
+            <button id="shopBtn" class="bg-[#1e293b] text-emerald-400 p-2 rounded-xl shadow-lg border-b-[3px] border-black/20 active:translate-y-1 active:border-b-0 transition-all flex flex-col items-center justify-center min-w-[60px]">
+                <i class="ph-bold ph-shopping-bag text-xl mb-0.5"></i><span class="text-[9px] font-black tracking-wider uppercase text-slate-300">Toko</span>
+            </button>
+            <button id="coolerBtn" class="bg-[#1e293b] text-blue-400 p-2 rounded-xl shadow-lg border-b-[3px] border-black/20 active:translate-y-1 active:border-b-0 transition-all flex flex-col items-center justify-center min-w-[60px] relative">
+                <i class="ph-bold ph-box text-xl mb-0.5"></i><span id="coolerFullBadge" class="absolute top-1 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1e293b] hidden"></span><span class="text-[9px] font-black tracking-wider uppercase text-slate-300">Boks Es</span>
+            </button>
+            <button id="logbookBtn" class="bg-[#1e293b] text-purple-400 p-2 rounded-xl shadow-lg border-b-[3px] border-black/20 active:translate-y-1 active:border-b-0 transition-all flex flex-col items-center justify-center min-w-[60px]">
+                <i class="ph-bold ph-book-open-text text-xl mb-0.5"></i><span class="text-[9px] font-black tracking-wider uppercase text-slate-300">Jurnal</span>
+            </button>
+            <button onclick="openModal('mapModal'); updateMapUI();" class="bg-[#1e293b] text-amber-400 p-2 rounded-xl shadow-lg border-b-[3px] border-black/20 active:translate-y-1 active:border-b-0 transition-all flex flex-col items-center justify-center min-w-[60px] relative">
+                <i class="ph-bold ph-map-trifold text-xl mb-0.5"></i><span id="questReadyBadge" class="absolute top-1 right-2 w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-[#1e293b] hidden animate-ping"></span><span class="text-[9px] font-black tracking-wider uppercase text-slate-300">Peta</span>
+            </button>
+        </div>
+
+        <!-- Cast & Bait Action Area -->
+        <div class="flex flex-col items-end gap-2">
+            <!-- Active Bait Indicator Button -->
+            <button id="activeBaitBtn" class="pointer-events-auto bg-[#1e293b] text-slate-500 px-3 py-1.5 rounded-full shadow-lg border-2 border-[#0f172a] text-[10px] font-black tracking-widest uppercase flex items-center gap-1 opacity-80 transition-all" onclick="openModal('shopModal'); updateShopUI();">
+                <i class="ph-fill ph-bug"></i> <span>Tanpa Umpan</span>
+            </button>
+            <!-- Cast Button -->
+            <button id="actionBtn" class="pointer-events-auto relative w-24 h-24 rounded-full bg-white text-[#0f172a] font-black text-[12px] tracking-widest shadow-[0_6px_0_#020617] active:shadow-[0_0px_0_#020617] active:translate-y-[6px] transition-all flex flex-col items-center justify-center border-[6px] border-[#0f172a]">
+                <i class="ph-bold ph-anchor text-[2rem] mb-0.5" id="actionIcon"></i>
+                <span id="actionText">LEMPAR</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /** * MANCING MANIAAA * Final Complete Version */
+
+    // --- State & Config ---
+    const GAME_STATE = { IDLE: 0, CASTING: 1, WAITING: 2, FISHING: 3 };
+    const SAVE_KEY = 'mancingManiaSaveData';
+
+    const state = {
+        mode: GAME_STATE.IDLE, money: 0, isDay: true, isStorm: false, gameTime: 8 * 60, timeSpeed: 2,     
+        ambientFish: [], particles: [], floatingTexts: [], inventory: [], 
+        logbook: {}, // Stores max weight caught { id: maxMass }
+        
+        activeBait: null, // null, 'cacing', 'daging', 'fosfor'
+        isReeling: false, tension: 0, hookDepth: 0, targetDepth: 0, currentFish: null,
+        directionalPull: null, pullTimer: 0, // 'KIRI' or 'KANAN'
+        
+        currentLocation: 0, // 0 = Dermaga Dangkal, 1 = Palung Mariana
+        quest: { count: 0, target: 5, reward: 100, claimed: false },
+
+        currentRodIndex: 0, highestRodOwned: 0, currentCoolerIndex: 0, highestCoolerOwned: 0,
+        stats: { rodPower: 0.6, tensionRecovery: 1.5, tensionBuild: 0.8, maxDepth: 150, capacity: 50 }
+    };
+
+    // --- Local Storage ---
+    function saveGame() {
+        const data = {
+            money: state.money, inventory: state.inventory, logbook: state.logbook,
+            currentRodIndex: state.currentRodIndex, highestRodOwned: state.highestRodOwned,
+            currentCoolerIndex: state.currentCoolerIndex, highestCoolerOwned: state.highestCoolerOwned,
+            activeBait: state.activeBait, quest: state.quest
+        };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    }
+
+    function loadGame() {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (raw) {
+            try {
+                const data = JSON.parse(raw);
+                state.money = data.money || 0; state.inventory = data.inventory || [];
+                state.logbook = data.logbook || {};
+                state.currentRodIndex = data.currentRodIndex || 0; state.highestRodOwned = data.highestRodOwned || 0;
+                state.currentCoolerIndex = data.currentCoolerIndex || 0; state.highestCoolerOwned = data.highestCoolerOwned || 0;
+                state.activeBait = data.activeBait || null;
+                state.quest = data.quest || { count: 0, target: 5, reward: 100, claimed: false };
+                
+                state.stats.rodPower = RODS_DB[state.currentRodIndex].power;
+                state.stats.maxDepth = RODS_DB[state.currentRodIndex].depth;
+                state.stats.capacity = COOLERS_DB[state.currentCoolerIndex].cap;
+                
+                document.getElementById('moneyDisplay').innerText = `${state.money} Koin`;
+                document.getElementById('maxDepthText').innerText = `${state.stats.maxDepth}m`;
+                updateBaitButtonUI();
+            } catch(e) { console.error("Save corrupted"); }
+        }
+    }
+
+    for(let i=0; i<40; i++) state.particles.push({ x: Math.random(), y: Math.random(), speed: 0.001 + Math.random() * 0.003, size: 1 + Math.random() * 2 });
+
+    // --- Databases ---
+    const RARITY_STYLES = {
+        "Common": "text-gray-400 border-gray-500/50 bg-gray-800/50",
+        "Uncommon": "text-emerald-400 border-emerald-500/50 bg-emerald-900/50",
+        "Rare": "text-blue-400 border-blue-500/50 bg-blue-900/50",
+        "Epic": "text-purple-400 border-purple-500/50 bg-purple-900/50",
+        "Legendary": "text-yellow-400 border-yellow-500/50 bg-yellow-900/50 shadow-[0_0_8px_rgba(250,204,21,0.5)]"
+    };
+
+    const RODS_DB = [
+        { name: "Bambu Biasa", cost: 0, power: 0.6, depth: 150, color: "#1e293b", desc: "Pancingan dasar pemula.", rarity: "Common" },
+        { name: "Pancing Fiber", cost: 150, power: 1.0, depth: 300, color: "#3b82f6", desc: "Tarikan lebih kuat.", rarity: "Uncommon" },
+        { name: "Penangkap Badai", cost: 800, power: 1.5, depth: 500, color: "#64748b", desc: "Stabil walau badai.", rarity: "Rare" },
+        { name: "Pancing Emas", cost: 2000, power: 2.0, depth: 700, color: "#fbbf24", desc: "Mewah dan kuat.", rarity: "Epic" },
+        { name: "Katrol Abisal", cost: 5000, power: 3.0, depth: 1500, color: "#8b5cf6", desc: "Untuk monster laut dalam.", rarity: "Epic" },
+        { name: "Leviathan Bulan", cost: 15000, power: 5.0, depth: 3000, color: "#fcd34d", desc: "Artefak legendaris.", rarity: "Legendary" }
+    ];
+
+    const COOLERS_DB = [
+        { name: "Ember Karat", cost: 0, cap: 50, icon: "ph-bucket" },
+        { name: "Boks Es Plastik", cost: 200, cap: 150, icon: "ph-box" },
+        { name: "Kulkas Industri", cost: 1200, cap: 500, icon: "ph-snowflake" },
+        { name: "Brankas Krio", cost: 4000, cap: 2000, icon: "ph-vault" }
+    ];
+
+    const BAIT_DB = [
+        { id: "cacing", name: "Cacing Tanah", cost: 10, color: "text-orange-400", desc: "Mempercepat ikan menggigit umpan." },
+        { id: "daging", name: "Daging Segar", cost: 50, color: "text-red-400", desc: "Meningkatkan peluang hiu & monster." },
+        { id: "fosfor", name: "Umpan Fosfor", cost: 100, color: "text-purple-400", desc: "Menarik perhatian ikan legendaris malam." }
+    ];
+
+    const LOCATIONS_DB = [
+        { name: "Dermaga Tropis", req: 0, desc: "Banyak ikan standar." },
+        { name: "Palung Mariana", req: 1000, desc: "Area monster laut dalam." }
+    ];
+
+    const FISH_DB = {
+        day: [
+            { id: "f1", name: "Kakap Matahari", color: "#facc15", value: 15, mass: 2, pullForce: 0.2, erratic: 0.02, spike: 5, stamina: 100, type: "standard", lore: "Sering berjemur di permukaan dermaga tropis.", loc: 0 },
+            { id: "f2", name: "Kerapu Karang", color: "#f87171", value: 35, mass: 6, pullForce: 0.3, erratic: 0.05, spike: 10, stamina: 150, type: "round", lore: "Ikan gemuk yang bersembunyi di balik karang dangkal.", loc: 0 },
+            { id: "f3", name: "Sturgeon Berat", color: "#9ca3af", value: 80, mass: 25, pullForce: 0.5, erratic: 0.01, spike: 15, stamina: 300, type: "sturgeon", lore: "Ikan prasejarah dengan sisik keras seperti baja.", loc: 0 },
+            { id: "f_mahi", name: "Mahi-Mahi", color: "#4ade80", value: 150, mass: 18, pullForce: 0.6, erratic: 0.1, spike: 20, stamina: 250, type: "long", lore: "Sangat gesit dan lincah di siang hari.", loc: 0 },
+            { id: "f_rainbow", name: "Ikan Pelangi", color: "rainbow", value: 800, mass: 8, pullForce: 0.8, erratic: 0.2, spike: 25, stamina: 400, type: "standard", isSpecial: true, lore: "Sangat langka. Warnanya berubah-ubah membiaskan cahaya.", loc: 0 },
+            { id: "f_shark", name: "Hiu Putih Besar", color: "#cbd5e1", value: 1200, mass: 300, pullForce: 1.2, erratic: 0.1, spike: 40, stamina: 800, type: "shark", lore: "Predator puncak lautan lepas.", loc: 1 }
+        ],
+        night: [
+            { id: "f4", name: "Belut Muram", color: "#a855f7", value: 120, mass: 15, pullForce: 0.6, erratic: 0.15, spike: 20, stamina: 200, type: "eel", lore: "Belut licin yang bercahaya ungu di malam hari.", loc: 0 },
+            { id: "f5", name: "Horor Abisal", color: "#111827", value: 400, mass: 80, pullForce: 0.8, erratic: 0.25, spike: 35, stamina: 500, type: "angler", lore: "Menggunakan lampu di kepalanya untuk menjebak mangsa.", loc: 1 },
+            { id: "f_squid", name: "Cumi Vampir", color: "#be123c", value: 600, mass: 60, pullForce: 0.7, erratic: 0.3, spike: 45, stamina: 450, type: "squid", lore: "Menggunakan tentakel tajam untuk menarik mangsanya ke dasar.", loc: 1 },
+            { id: "f_octopus", name: "Kraken Raksasa", color: "#831843", value: 2000, mass: 500, pullForce: 1.5, erratic: 0.4, spike: 60, stamina: 1200, type: "octopus", lore: "Mitos yang menjadi kenyataan. Bisa menghancurkan kapal.", loc: 1 },
+            { id: "f6", name: "Leviathan Bio", color: "#34d399", value: 3000, mass: 800, pullForce: 1.8, erratic: 0.3, spike: 50, stamina: 2000, type: "leviathan", lore: "Penguasa palung terdalam. Bersinar terang dalam kegelapan pekat.", loc: 1 }
+        ]
+    };
+
+    // --- Audio System ---
+    const audioState = { initialized: false, ctx: null, ambientFilter: null, nightGain: null, musicGain: null, nextNoteTime: 0, lastReelClick: 0, muted: false };
+
+    function initAudio() {
+        if (audioState.initialized) return;
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext; audioState.ctx = new AudioContext();
+            const bufferSize = audioState.ctx.sampleRate * 2; const buffer = audioState.ctx.createBuffer(1, bufferSize, audioState.ctx.sampleRate);
+            const data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            const noiseSource = audioState.ctx.createBufferSource(); noiseSource.buffer = buffer; noiseSource.loop = true;
+            audioState.ambientFilter = audioState.ctx.createBiquadFilter(); audioState.ambientFilter.type = 'lowpass'; audioState.ambientFilter.frequency.value = 200;
+            const ambientGain = audioState.ctx.createGain(); ambientGain.gain.value = 0.05;
+            noiseSource.connect(audioState.ambientFilter); audioState.ambientFilter.connect(ambientGain); ambientGain.connect(audioState.ctx.destination); noiseSource.start();
+            
+            const nightOsc = audioState.ctx.createOscillator(); nightOsc.type = 'sine'; nightOsc.frequency.value = 55;
+            audioState.nightGain = audioState.ctx.createGain(); audioState.nightGain.gain.value = 0;
+            nightOsc.connect(audioState.nightGain); audioState.nightGain.connect(audioState.ctx.destination); nightOsc.start();
+            
+            audioState.musicGain = audioState.ctx.createGain(); audioState.musicGain.gain.value = 0.6; audioState.musicGain.connect(audioState.ctx.destination);
+            audioState.nextNoteTime = audioState.ctx.currentTime + 1; audioState.initialized = true;
+        } catch (e) { console.log("Audio API blocked."); }
+    }
+
+    document.getElementById('audioBtn').addEventListener('click', () => {
+        if (!audioState.initialized) initAudio(); audioState.muted = !audioState.muted;
+        document.getElementById('audioIcon').className = audioState.muted ? "ph-bold ph-speaker-slash text-lg text-gray-500" : "ph-bold ph-speaker-high text-lg text-teal-400";
+        if (audioState.muted && audioState.ctx) audioState.ctx.suspend(); else if (audioState.ctx) audioState.ctx.resume();
+    });
+
+    function scheduleMusic() {
+        if (!audioState.initialized || !audioState.ctx || audioState.muted) return;
+        while (audioState.nextNoteTime < audioState.ctx.currentTime + 0.1) {
+            const t = audioState.nextNoteTime; const ctx = audioState.ctx;
+            
+            if (state.isDay && !state.isStorm && Math.random() < 0.2) {
+                // Seagull-ish synth
+                const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(audioState.musicGain);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(800, t); osc.frequency.exponentialRampToValueAtTime(400, t + 0.5);
+                gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.05, t + 0.1); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5); osc.start(t); osc.stop(t + 0.5);
+            } else if (!state.isDay && !state.isStorm && Math.random() < 0.3) {
+                // Cricket-ish synth
+                const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(audioState.musicGain);
+                osc.type = 'square'; osc.frequency.setValueAtTime(3000, t); gain.gain.setValueAtTime(0, t); gain.gain.setValueAtTime(0.01, t+0.01); gain.gain.setValueAtTime(0, t+0.05); osc.start(t); osc.stop(t + 0.05);
+            }
+
+            const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(audioState.musicGain);
+            if (state.isDay && !state.isStorm) {
+                const dayScale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; osc.type = 'triangle'; osc.frequency.value = dayScale[Math.floor(Math.random() * dayScale.length)];
+                gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.04, t + 0.05); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6); osc.start(t); osc.stop(t + 0.6);
+            } else {
+                osc.type = 'sine';
+                if (Math.random() < 0.2) {
+                    osc.frequency.value = 600 + (Math.random() * 400); gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.02, t + 0.5); gain.gain.exponentialRampToValueAtTime(0.001, t + 2); osc.start(t); osc.stop(t + 2);
+                } else {
+                    const nightScale = [65.41, 77.78, 98.00, 103.83]; osc.frequency.value = nightScale[Math.floor(Math.random() * nightScale.length)];
+                    gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.06, t + 1); gain.gain.exponentialRampToValueAtTime(0.001, t + 4); osc.start(t); osc.stop(t + 4);
+                }
+            }
+            audioState.nextNoteTime += (state.isDay && !state.isStorm) ? 0.3 : 1.5; 
+        }
+    }
+
+    function playSfx(type) {
+        if (!audioState.initialized || !audioState.ctx || audioState.muted) return;
+        const t = audioState.ctx.currentTime; const osc = audioState.ctx.createOscillator(); const gain = audioState.ctx.createGain();
+        osc.connect(gain); gain.connect(audioState.ctx.destination);
+        if (type === 'reel') { osc.type = 'square'; osc.frequency.setValueAtTime(800, t); osc.frequency.exponentialRampToValueAtTime(400, t + 0.05); gain.gain.setValueAtTime(0.02, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05); osc.start(t); osc.stop(t + 0.05); } 
+        else if (type === 'snap') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, t); osc.frequency.exponentialRampToValueAtTime(20, t + 0.3); gain.gain.setValueAtTime(0.3, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3); osc.start(t); osc.stop(t + 0.3); } 
+        else if (type === 'catch' || type === 'perfect') { osc.type = 'sine'; osc.frequency.setValueAtTime(440, t); osc.frequency.setValueAtTime(type==='perfect'?880:554, t + 0.1); gain.gain.setValueAtTime(0.2, t); gain.gain.linearRampToValueAtTime(0, t + (type==='perfect'?0.3:0.5)); osc.start(t); osc.stop(t + 0.5); } 
+        else if (type === 'cast') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, t); osc.frequency.exponentialRampToValueAtTime(200, t + 0.4); gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.4); osc.start(t); osc.stop(t + 0.4); }
+        else if (type === 'alert') { osc.type = 'square'; osc.frequency.setValueAtTime(1200, t); osc.frequency.setValueAtTime(800, t+0.1); gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.3); osc.start(t); osc.stop(t + 0.3); }
+    }
+
+    // --- DOM Elements & Logic ---
+    const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+    const container = document.getElementById('game-container');
+    const actionBtn = document.getElementById('actionBtn'), actionText = document.getElementById('actionText'), actionIcon = document.getElementById('actionIcon');
+    const tensionUI = document.getElementById('tensionUI'), tensionBar = document.getElementById('tensionBar'), tensionWarning = document.getElementById('tensionWarning');
+    const staminaBar = document.getElementById('staminaBar');
+    const depthUI = document.getElementById('depthUI'), depthIndicator = document.getElementById('depthIndicator');
+    const moneyDisplay = document.getElementById('moneyDisplay'), timeDisplay = document.getElementById('timeDisplay'), timeIcon = document.getElementById('timeIcon'), timeText = document.getElementById('timeText');
+    const modalVisualCtx = document.getElementById('modalVisual').getContext('2d');
+    
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function spawnText(text, x, y, color) { state.floatingTexts.push({ text, x, y, color, age: 0, life: 60 }); }
+
+    function showNotification(text, iconClass, bgColorClass, borderColorClass) {
+        const notif = document.getElementById('eventNotification');
+        document.getElementById('eventNotifText').innerText = text;
+        document.getElementById('eventNotifIcon').className = `ph-bold ${iconClass} text-xl`;
+        notif.className = `absolute top-24 left-1/2 -translate-x-1/2 ${bgColorClass} text-white px-6 py-2 rounded-full font-black tracking-widest uppercase shadow-lg border-2 ${borderColorClass} transition-all duration-500 transform translate-y-0 opacity-100 z-20 pointer-events-none flex items-center gap-2 text-sm`;
+        setTimeout(() => { notif.classList.remove('translate-y-0', 'opacity-100'); notif.classList.add('-translate-y-20', 'opacity-0'); }, 4000);
+    }
+
+    document.getElementById('startBtn').addEventListener('click', () => {
+        document.getElementById('introScreen').style.opacity = 0; setTimeout(() => document.getElementById('introScreen').style.display = 'none', 800);
+        if(!audioState.initialized) initAudio(); loadGame(); updateMapUI();
+    });
+
+    const cachedGradients = { day: null, night: null, storm: null };
+    const cachedFishSprites = {};
+    function getFishSprite(type, color, shapeClass) {
+        const key = `${type}_${color}_${shapeClass}`;
+        if (!cachedFishSprites[key]) {
+            const off = document.createElement('canvas'); off.width = 120; off.height = 120;
+            drawDetailedFish(off.getContext('2d'), shapeClass, color, 60, 60, 40, 0, false);
+            cachedFishSprites[key] = off;
+        }
+        return cachedFishSprites[key];
+    }
+
+    function resizeCanvas() {
+        const rect = container.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr; canvas.height = rect.height * dpr; ctx.scale(dpr, dpr);
+        const h = canvas.height / dpr;
+        cachedGradients.day = ctx.createLinearGradient(0, h * 0.22, 0, h); cachedGradients.day.addColorStop(0, '#0284c7'); cachedGradients.day.addColorStop(1, '#082f49');
+        cachedGradients.night = ctx.createLinearGradient(0, h * 0.22, 0, h); cachedGradients.night.addColorStop(0, '#0f172a'); cachedGradients.night.addColorStop(1, '#020617');
+        cachedGradients.storm = ctx.createLinearGradient(0, h * 0.22, 0, h); cachedGradients.storm.addColorStop(0, '#334155'); cachedGradients.storm.addColorStop(1, '#0f172a');
+    }
+    window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+    const startReel = (e) => {
+        if(e.cancelable) e.preventDefault(); if(!audioState.initialized && !audioState.muted) initAudio();
+        if(state.mode === GAME_STATE.IDLE) castLine();
+        else if (state.mode !== GAME_STATE.IDLE) { state.isReeling = true; actionBtn.style.transform = "translateY(6px)"; actionBtn.style.boxShadow = "0 0px 0 #020617"; actionBtn.classList.replace('bg-white', 'bg-slate-200'); }
+    };
+    const stopReel = (e) => {
+        if(e.cancelable) e.preventDefault(); state.isReeling = false; actionBtn.style.transform = "translateY(0)"; actionBtn.style.boxShadow = "0 6px 0 #020617"; actionBtn.classList.replace('bg-slate-200', 'bg-white');
+    };
+    actionBtn.addEventListener('mousedown', startReel); actionBtn.addEventListener('touchstart', startReel, {passive: false});
+    window.addEventListener('mouseup', stopReel); window.addEventListener('touchend', stopReel);
+    document.getElementById('modalBtn').addEventListener('click', () => { closeModal('messageModal'); resetToIdle(); });
+
+    // Menu Interactions
+    document.getElementById('coolerBtn').addEventListener('click', () => { if(state.mode===GAME_STATE.IDLE) { updateCoolerUI(); openModal('coolerModal'); }});
+    document.getElementById('closeCoolerBtn').addEventListener('click', () => closeModal('coolerModal'));
+    document.getElementById('shopBtn').addEventListener('click', () => { if(state.mode===GAME_STATE.IDLE) { updateShopUI(); openModal('shopModal'); }});
+    document.getElementById('closeShopBtn').addEventListener('click', () => closeModal('shopModal'));
+    document.getElementById('logbookBtn').addEventListener('click', () => { if(state.mode===GAME_STATE.IDLE) { updateLogbookUI(); openModal('logbookModal'); }});
+    document.getElementById('closeLogbookBtn').addEventListener('click', () => closeModal('logbookModal'));
+
+    document.getElementById('sellAllBtn').addEventListener('click', () => {
+        if (state.inventory.length === 0) return;
+        const totalValue = state.inventory.reduce((sum, fish) => sum + fish.value, 0);
+        state.money += totalValue; state.inventory = []; moneyDisplay.innerText = `${state.money} Koin`;
+        playSfx('catch'); spawnText(`+${totalValue} Koin`, canvas.width/(2*window.devicePixelRatio), canvas.height/(2*window.devicePixelRatio), '#34d399');
+        document.getElementById('coolerFullBadge').classList.add('hidden');
+        saveGame(); updateShopUI(); updateMapUI();
+    });
+
+    document.getElementById('claimQuestBtn').addEventListener('click', () => {
+        if(state.quest.count >= state.quest.target && !state.quest.claimed) {
+            state.money += state.quest.reward; state.quest.claimed = true; moneyDisplay.innerText = `${state.money} Koin`; playSfx('catch');
+            document.getElementById('questReadyBadge').classList.add('hidden');
+            // Generate new quest
+            state.quest = { count: 0, target: Math.floor(Math.random()*5)+3, reward: (Math.floor(Math.random()*3)+1)*50, claimed: false };
+            saveGame(); updateMapUI();
+        }
+    });
+
+    function updateBaitButtonUI() {
+        const btn = document.getElementById('activeBaitBtn');
+        if (!state.activeBait) {
+            btn.innerHTML = `<i class="ph-bold ph-bug"></i> <span>Tanpa Umpan</span>`;
+            btn.className = "pointer-events-auto bg-[#1e293b] text-slate-500 px-3 py-1.5 rounded-full shadow-lg border-2 border-[#0f172a] text-[10px] font-black tracking-widest uppercase flex items-center gap-1 opacity-80 transition-all";
+        } else {
+            const baitDef = BAIT_DB.find(b => b.id === state.activeBait);
+            btn.innerHTML = `<i class="ph-fill ph-bug"></i> <span>${baitDef.name}</span>`;
+            btn.className = `pointer-events-auto bg-[#1e293b] ${baitDef.color} px-3 py-1.5 rounded-full shadow-lg border-2 border-[#0f172a] text-[10px] font-black tracking-widest uppercase flex items-center gap-1 transition-all`;
+        }
+    }
+
+    // --- UI Updaters ---
+    function updateMapUI() {
+        // Quest
+        document.getElementById('questDesc').innerText = `Tangkap ${state.quest.target} Ikan Apa Saja`;
+        document.getElementById('questProg').innerText = `${state.quest.count} / ${state.quest.target}`;
+        document.getElementById('questBar').style.width = `${Math.min(100, (state.quest.count/state.quest.target)*100)}%`;
+        if (state.quest.count >= state.quest.target && !state.quest.claimed) {
+            document.getElementById('claimQuestBtn').classList.remove('hidden'); document.getElementById('questReadyBadge').classList.remove('hidden');
+        } else {
+            document.getElementById('claimQuestBtn').classList.add('hidden'); document.getElementById('questReadyBadge').classList.add('hidden');
+        }
+        
+        // Locations
+        const locList = document.getElementById('locationList'); locList.innerHTML = '';
+        LOCATIONS_DB.forEach((loc, idx) => {
+            const isUnlocked = state.stats.maxDepth >= loc.req;
+            const isCurrent = state.currentLocation === idx;
+            let btn = isCurrent ? `<button class="bg-amber-600/20 text-amber-400 px-3 py-1.5 rounded-xl font-black text-xs border-2 border-amber-500/50 cursor-default">LOKASI SAAT INI</button>` 
+                      : isUnlocked ? `<button class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-1.5 rounded-xl font-black text-xs transition-colors go-loc-btn" data-idx="${idx}">PINDAH</button>`
+                      : `<button class="bg-slate-800 text-slate-500 px-3 py-1.5 rounded-xl font-black text-xs border-2 border-slate-700 flex items-center gap-1"><i class="ph-bold ph-lock"></i> Butuh Pancing ${loc.req}m</button>`;
+            
+            locList.innerHTML += `<div class="bg-slate-800/80 p-3 rounded-xl border-2 ${isCurrent?'border-amber-500':(isUnlocked?'border-slate-600/50':'border-slate-700/50 opacity-60')} flex justify-between items-center shadow-inner">
+                <div class="flex-1 pr-2"><div class="font-black text-[15px] leading-none text-slate-200 mb-1">${loc.name}</div><div class="text-[10px] text-gray-400">${loc.desc}</div></div>${btn}</div>`;
+        });
+
+        document.querySelectorAll('.go-loc-btn').forEach(b => b.addEventListener('click', e => {
+            state.currentLocation = parseInt(e.currentTarget.dataset.idx); playSfx('cast'); updateMapUI();
+            showNotification(`PINDAH KE ${LOCATIONS_DB[state.currentLocation].name.toUpperCase()}`, "ph-map-pin", "bg-sky-600/90", "border-sky-400/50");
+        }));
+    }
+
+    function updateCoolerUI() {
+        const coolerList = document.getElementById('coolerList'); coolerList.innerHTML = '';
+        const currentWeight = state.inventory.reduce((sum, fish) => sum + fish.mass, 0);
+        coolerList.innerHTML = `<div class="text-white text-sm text-center border-b border-slate-600 pb-2 mb-2 sticky top-0 bg-[#1e293b]/95 py-2 z-10">Kapasitas: ${currentWeight}kg / ${state.stats.capacity}kg</div>`;
+        if (state.inventory.length === 0) { coolerList.innerHTML += `<div class="text-gray-400 text-center py-8 italic">Boks es milikmu masih kosong.</div>`; return; }
+        state.inventory.forEach(fish => {
+            const isRainbow = fish.color === 'rainbow';
+            const colorCode = isRainbow ? `linear-gradient(45deg, #ef4444, #eab308, #22c55e, #3b82f6, #a855f7)` : fish.color;
+            coolerList.innerHTML += `
+                <div class="flex justify-between items-center bg-slate-800/80 p-3 rounded-xl border-2 border-slate-600/50">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-slate-600 bg-slate-900 shadow-inner">
+                            <div class="w-4 h-4 rounded-full shadow-lg" style="background: ${colorCode}"></div>
+                        </div>
+                        <div><div class="text-white font-black text-sm">${fish.name}</div><div class="text-sky-400 text-xs font-bold">Berat: ${fish.mass}kg</div></div>
+                    </div>
+                    <div class="text-emerald-400 font-mono text-sm font-bold bg-emerald-900/30 px-2 py-1 rounded-lg">${fish.value} Koin</div>
+                </div>`;
+        });
+    }
+
+    function updateShopUI() {
+        document.getElementById('sellValueDisplay').innerText = `${state.inventory.reduce((sum, f) => sum + f.value, 0)} Koin`;
+        const sellBtn = document.getElementById('sellAllBtn');
+        if (state.inventory.length === 0) { sellBtn.classList.replace('bg-emerald-500', 'bg-slate-600'); sellBtn.disabled = true; sellBtn.classList.add('opacity-50'); } else { sellBtn.classList.replace('bg-slate-600', 'bg-emerald-500'); sellBtn.disabled = false; sellBtn.classList.remove('opacity-50'); }
+        
+        state.highestRodOwned = state.highestRodOwned || state.currentRodIndex; state.highestCoolerOwned = state.highestCoolerOwned || state.currentCoolerIndex;
+
+        const baitList = document.getElementById('shopBaitList'); baitList.innerHTML = '';
+        BAIT_DB.forEach(bait => {
+            const isActive = state.activeBait === bait.id; const canAfford = state.money >= bait.cost;
+            let btn = isActive ? `<button class="bg-purple-600/20 text-purple-400 px-3 py-1.5 rounded-xl font-black text-xs border-2 border-purple-500/50 cursor-default">DIPAKAI</button>`
+                      : `<button class="${canAfford?'bg-purple-600 active:bg-purple-700':'bg-slate-600 opacity-50'} text-white px-3 py-1.5 rounded-xl font-black text-xs buy-bait-btn" data-id="${bait.id}" ${!canAfford?'disabled':''}>${bait.cost} Koin</button>`;
+            baitList.innerHTML += `<div class="bg-slate-800/80 p-3 rounded-xl border-2 ${isActive?'border-purple-500':'border-slate-600/50'} flex justify-between items-center shadow-inner">
+                <div class="flex-1 pr-2"><div class="font-black text-[14px] leading-none ${bait.color} mb-1">${bait.name}</div><div class="text-[10px] text-gray-400">${bait.desc}</div></div>${btn}</div>`;
+        });
+
+        const rodList = document.getElementById('shopUpgradesList'); rodList.innerHTML = '';
+        RODS_DB.forEach((rod, idx) => {
+            const isOwned = idx <= state.highestRodOwned; const isEquipped = idx === state.currentRodIndex; const canAfford = state.money >= rod.cost;
+            let btn = isEquipped ? `<button class="bg-emerald-600/20 text-emerald-400 px-3 py-1.5 rounded-xl font-black text-xs border-2 border-emerald-500/50 cursor-default">DIPAKAI</button>` 
+                      : isOwned ? `<button class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-1.5 rounded-xl font-black text-xs transition-colors equip-rod-btn" data-idx="${idx}">PAKAI</button>`
+                      : (idx===state.highestRodOwned+1) ? `<button class="${canAfford?'bg-sky-500':'bg-slate-600 opacity-50'} text-white px-3 py-1.5 rounded-xl font-black text-xs buy-rod-btn" data-idx="${idx}">${rod.cost} Koin</button>`
+                      : `<button class="bg-slate-800 text-slate-500 px-3 py-1.5 rounded-xl font-black text-xs border-2 border-slate-700"><i class="ph-bold ph-lock"></i> ${rod.cost}</button>`;
+            rodList.innerHTML += `<div class="bg-slate-800/80 p-3 rounded-xl border-2 ${isEquipped?'border-emerald-500':(idx===state.highestRodOwned+1&&canAfford?'border-sky-500':'border-slate-600/50')} flex justify-between items-center shadow-inner">
+                <div class="flex-1 pr-2"><div class="flex items-center gap-2 mb-1"><div class="font-black text-[15px] leading-none text-slate-200" style="color:${rod.color!=='#1e293b'?rod.color:''}">${rod.name}</div><div class="text-[8px] uppercase font-black px-1.5 py-0.5 rounded-md border ${RARITY_STYLES[rod.rarity]}">${rod.rarity}</div></div><div class="text-[10px] text-gray-400 mb-1">${rod.desc}</div><div class="text-[9px] text-sky-200 bg-sky-900/50 inline-block px-1.5 py-0.5 rounded border border-sky-800/50">Kek: ${rod.power}x | Kedalaman: ${rod.depth}m</div></div>${btn}</div>`;
+        });
+
+        const colList = document.getElementById('shopCoolersList'); colList.innerHTML = '';
+        COOLERS_DB.forEach((col, idx) => {
+            const isOwned = idx <= state.highestCoolerOwned; const isEquipped = idx === state.currentCoolerIndex; const canAfford = state.money >= col.cost;
+            let btn = isEquipped ? `<button class="bg-emerald-600/20 text-emerald-400 px-3 py-1.5 rounded-xl font-black text-xs border-2 border-emerald-500/50 cursor-default">DIPAKAI</button>` 
+                      : isOwned ? `<button class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-1.5 rounded-xl font-black text-xs transition-colors equip-col-btn" data-idx="${idx}">PAKAI</button>`
+                      : (idx===state.highestCoolerOwned+1) ? `<button class="${canAfford?'bg-sky-500':'bg-slate-600 opacity-50'} text-white px-3 py-1.5 rounded-xl font-black text-xs buy-col-btn" data-idx="${idx}">${col.cost} Koin</button>`
+                      : `<button class="bg-slate-800 text-slate-500 px-3 py-1.5 rounded-xl font-black text-xs border-2 border-slate-700"><i class="ph-bold ph-lock"></i> ${col.cost}</button>`;
+            colList.innerHTML += `<div class="bg-slate-800/80 p-3 rounded-xl border-2 ${isEquipped?'border-emerald-500':(idx===state.highestCoolerOwned+1&&canAfford?'border-sky-500':'border-slate-600/50')} flex justify-between items-center shadow-inner">
+                <div class="flex-1 pr-2"><div class="font-black text-[15px] leading-none text-slate-200 flex items-center gap-1 mb-1"><i class="ph-bold ${col.icon} text-sky-400"></i> ${col.name}</div><div class="text-[10px] text-sky-200 bg-sky-900/50 inline-block px-1.5 py-0.5 rounded border border-sky-800/50">Kapasitas: ${col.cap}kg</div></div>${btn}</div>`;
+        });
+
+        document.querySelectorAll('.buy-bait-btn').forEach(b => b.addEventListener('click', e => {
+            const id = e.currentTarget.dataset.id; const bait = BAIT_DB.find(x => x.id === id);
+            if (state.money >= bait.cost) { state.money -= bait.cost; state.activeBait = id; moneyDisplay.innerText = `${state.money} Koin`; playSfx('catch'); saveGame(); updateShopUI(); updateBaitButtonUI(); }
+        }));
+        document.querySelectorAll('.buy-rod-btn').forEach(b => b.addEventListener('click', e => {
+            const idx = parseInt(e.currentTarget.dataset.idx); if (state.money >= RODS_DB[idx].cost) { state.money -= RODS_DB[idx].cost; state.highestRodOwned = idx; state.currentRodIndex = idx; state.stats.rodPower = RODS_DB[idx].power; state.stats.maxDepth = RODS_DB[idx].depth; moneyDisplay.innerText = `${state.money} Koin`; playSfx('catch'); document.getElementById('maxDepthText').innerText = RODS_DB[idx].depth+'m'; saveGame(); updateShopUI(); }
+        }));
+        document.querySelectorAll('.equip-rod-btn').forEach(b => b.addEventListener('click', e => {
+            const idx = parseInt(e.currentTarget.dataset.idx); state.currentRodIndex = idx; state.stats.rodPower = RODS_DB[idx].power; state.stats.maxDepth = RODS_DB[idx].depth; playSfx('cast'); document.getElementById('maxDepthText').innerText = RODS_DB[idx].depth+'m'; saveGame(); updateShopUI();
+        }));
+        document.querySelectorAll('.buy-col-btn').forEach(b => b.addEventListener('click', e => {
+            const idx = parseInt(e.currentTarget.dataset.idx); if (state.money >= COOLERS_DB[idx].cost) { state.money -= COOLERS_DB[idx].cost; state.highestCoolerOwned = idx; state.currentCoolerIndex = idx; state.stats.capacity = COOLERS_DB[idx].cap; moneyDisplay.innerText = `${state.money} Koin`; playSfx('catch'); saveGame(); updateShopUI(); }
+        }));
+        document.querySelectorAll('.equip-col-btn').forEach(b => b.addEventListener('click', e => {
+            const idx = parseInt(e.currentTarget.dataset.idx); state.currentCoolerIndex = idx; state.stats.capacity = COOLERS_DB[idx].cap; playSfx('cast'); saveGame(); updateShopUI();
+        }));
+    }
+
+    function updateLogbookUI() {
+        const grid = document.getElementById('logbookGrid'); grid.innerHTML = '';
+        const allFish = [...FISH_DB.day, ...FISH_DB.night];
+        document.getElementById('logbookProgress').innerText = `${Object.keys(state.logbook).length} / ${allFish.length} Ditemukan`;
+        
+        allFish.forEach(f => {
+            const caught = state.logbook[f.id] !== undefined;
+            const isRainbow = f.color === 'rainbow';
+            const bgStr = caught ? (isRainbow ? `background: linear-gradient(45deg, #ef4444, #eab308, #22c55e, #3b82f6, #a855f7);` : `background-color: ${f.color};`) : `background-color: #1e293b; box-shadow: inset 0 0 5px #0f172a;`;
+            grid.innerHTML += `
+                <div class="bg-slate-800 border-2 ${caught?'border-slate-600 cursor-pointer hover:bg-slate-700':'border-slate-700/50'} rounded-xl p-2 flex flex-col items-center text-center transition-colors" ${caught ? `onclick="showLore('${f.id}')"` : ''}>
+                    <div class="w-12 h-12 rounded-full ${caught?'bg-slate-700':'bg-slate-900'} flex items-center justify-center mb-2 shadow-inner">
+                        <div class="w-6 h-6 rounded-full" style="${bgStr}"></div>
+                    </div>
+                    <div class="text-[9px] font-black leading-tight ${caught?'text-slate-200':'text-slate-600'} uppercase">${caught?f.name:'???'}</div>
+                </div>`;
+        });
+    }
+
+    function showLore(fishId) {
+        const allFish = [...FISH_DB.day, ...FISH_DB.night];
+        const f = allFish.find(x => x.id === fishId);
+        if(!f) return;
+        document.getElementById('loreTitle').innerText = f.name;
+        document.getElementById('loreTitle').style.color = f.color === '#111827' ? '#94a3b8' : (f.color === 'rainbow' ? '#fcd34d' : f.color);
+        document.getElementById('loreSubtitle').innerText = `Rekor Terbesar: ${state.logbook[f.id]} kg`;
+        document.getElementById('loreDesc').innerText = `"${f.lore}"\n\nHabitat: ${f.loc === 0 ? 'Dermaga Tropis' : 'Palung Mariana'}`;
+        
+        const lCtx = document.getElementById('loreVisual').getContext('2d');
+        lCtx.clearRect(0, 0, 160, 160); drawDetailedFish(lCtx, f.type, f.color, 80, 80, 70, 0, true);
+        openModal('loreModal');
+    }
+
+    // --- Core Gameplay Actions ---
+    function castLine() {
+        state.mode = GAME_STATE.CASTING; state.tension = 0; state.hookDepth = 0; state.targetDepth = 50 + Math.random() * state.stats.maxDepth; 
+        state.pullTimer = 0; state.directionalPull = null; document.getElementById('dirWarning').style.opacity = 0;
+        actionText.innerText = "TARIK"; actionIcon.className = "ph-bold ph-arrow-fat-line-down text-[2rem] mb-0.5 text-blue-600"; actionBtn.classList.remove('anim-pulse');
+        depthUI.classList.remove('hidden'); depthIndicator.style.top = "0%"; playSfx('cast');
+    }
+
+    function hookFish() {
+        state.mode = GAME_STATE.FISHING; tensionUI.classList.remove('hidden'); actionBtn.classList.add('anim-pulse');
+        
+        // Filter pool by location
+        const rawPool = state.isDay ? FISH_DB.day : FISH_DB.night;
+        const pool = rawPool.filter(f => f.loc <= state.currentLocation);
+        
+        let index = Math.floor(Math.random() * pool.length);
+        
+        // Bait Modifiers
+        if (state.activeBait === 'daging') index = Math.min(pool.length - 1, index + 2); // Boost large fish
+        else if (state.activeBait === 'fosfor' && !state.isDay) index = pool.length - 1; // Guarantee rare at night
+        else if(state.isStorm && Math.random() > 0.5) index = Math.min(pool.length - 1, index + 1);
+        else if(!state.isDay && state.hookDepth > 100 && Math.random() > 0.5) index = pool.length - 1;
+
+        state.currentFish = { ...pool[index] };
+        state.currentFish.currentStamina = state.currentFish.stamina; // Init stamina
+
+        document.body.style.transform = "translateY(5px)"; setTimeout(() => document.body.style.transform = "translateY(0)", 100); playSfx('cast');
+    }
+
+    function catchFish() {
+        const f = state.currentFish; const currentWeight = state.inventory.reduce((sum, fish) => sum + fish.mass, 0);
+        
+        // Update Logbook & Quests
+        if(!state.logbook[f.id] || f.mass > state.logbook[f.id]) state.logbook[f.id] = f.mass;
+        state.quest.count++; saveGame(); updateMapUI();
+        
+        if(state.activeBait) { state.activeBait = null; updateBaitButtonUI(); }
+
+        const titleObj = document.getElementById('modalTitle');
+        if (currentWeight + f.mass <= state.stats.capacity) {
+            state.inventory.push(f); playSfx('catch');
+            titleObj.innerText = f.isSpecial ? "TANGKAPAN LANGKA!" : "DAPAT!"; titleObj.style.color = f.color === '#111827' ? '#94a3b8' : (f.color === 'rainbow' ? '#fcd34d' : f.color);
+            document.getElementById('modalDesc').innerHTML = `Kamu menangkap <b>${f.name}</b><br><span class="text-sm text-sky-200">Berat: ${f.mass}kg | Harga: ${f.value} Koin</span><br><span class="text-xs text-emerald-400 font-black block mt-2">Disimpan di boks es!</span>`;
+            if (currentWeight + f.mass >= state.stats.capacity * 0.9) document.getElementById('coolerFullBadge').classList.remove('hidden');
+        } else {
+            playSfx('snap'); titleObj.innerText = "BOKS ES PENUH!"; titleObj.style.color = f.color === 'rainbow' ? '#fcd34d' : f.color;
+            document.getElementById('modalDesc').innerHTML = `Kamu menangkap <b>${f.name}</b> tapi boks es penuh! <br><span class="text-xs text-slate-400">(${currentWeight}kg / ${state.stats.capacity}kg)</span><br><span class="text-xs text-red-400 font-black block mt-2">Ikan terpaksa dilepas kembali.</span>`;
+        }
+        
+        modalVisualCtx.clearRect(0, 0, 160, 160); drawDetailedFish(modalVisualCtx, f.type, f.color, 80, 80, 70, 0, true);
+        openModal('messageModal'); tensionUI.classList.add('hidden'); depthUI.classList.add('hidden'); document.getElementById('dirWarning').style.opacity = 0;
+        actionText.innerText = "LEMPAR"; actionIcon.className = "ph-bold ph-anchor text-[2rem] mb-0.5"; actionBtn.classList.remove('anim-pulse');
+        state.mode = GAME_STATE.IDLE; saveGame();
+    }
+
+    function snapLine(reason) {
+        playSfx('snap');
+        document.getElementById('modalTitle').innerText = "TALI PUTUS"; document.getElementById('modalTitle').style.color = "#ef4444";
+        document.getElementById('modalDesc').innerHTML = reason;
+        modalVisualCtx.clearRect(0, 0, 160, 160); modalVisualCtx.strokeStyle = 'white'; modalVisualCtx.lineWidth = 4; modalVisualCtx.beginPath(); modalVisualCtx.arc(80, 80, 25, 0, Math.PI); modalVisualCtx.stroke(); modalVisualCtx.fillStyle = '#ef4444'; modalVisualCtx.font = "bold 50px Arial"; modalVisualCtx.textAlign = "center"; modalVisualCtx.fillText("X", 80, 95);
+        openModal('messageModal'); tensionUI.classList.add('hidden'); depthUI.classList.add('hidden'); document.getElementById('dirWarning').style.opacity = 0;
+        actionText.innerText = "LEMPAR"; actionIcon.className = "ph-bold ph-anchor text-[2rem] mb-0.5"; actionBtn.classList.remove('anim-pulse');
+        state.mode = GAME_STATE.IDLE;
+        if(state.activeBait) { state.activeBait = null; updateBaitButtonUI(); saveGame(); }
+    }
+
+    function resetToIdle() {
+        state.mode = GAME_STATE.IDLE; state.hookDepth = 0; state.tension = 0; state.currentFish = null; state.isReeling = false; state.directionalPull = null;
+        depthIndicator.style.top = "0%"; document.getElementById('dirWarning').style.opacity = 0;
+        if(state.activeBait) { state.activeBait = null; updateBaitButtonUI(); saveGame(); } // Lose bait if cancelled
+    }
+
+    // --- Vector Drawing ---
+    function drawDetailedFish(ctxRef, type, color, x, y, size, time, isFlipped = false) {
+        ctxRef.save(); ctxRef.translate(x, y); if (isFlipped) ctxRef.scale(-1, 1);
+        ctxRef.rotate(Math.sin(time * 0.01) * 0.1); ctxRef.scale(size / 50, size / 50); 
+        let fillColor = color; if (color === 'rainbow') { const h = (time * 0.1) % 360; fillColor = `hsl(${h}, 100%, 50%)`; }
+        const grad = ctxRef.createLinearGradient(0, -20, 0, 20); 
+        if(color !== 'rainbow') { grad.addColorStop(0, fillColor); grad.addColorStop(0.8, '#222222'); } else { grad.addColorStop(0, fillColor); grad.addColorStop(1, '#ffffff'); }
+        ctxRef.fillStyle = grad; ctxRef.strokeStyle = '#000'; ctxRef.lineWidth = 1;
+
+        ctxRef.beginPath();
+        if (type === 'standard' || type === 'round' || type === 'long') {
+            ctxRef.beginPath(); ctxRef.moveTo(-20, 0); ctxRef.lineTo(-40, -15); ctxRef.lineTo(-30, 0); ctxRef.lineTo(-40, 15); ctxRef.closePath(); ctxRef.fill(); ctxRef.stroke();
+            if (type === 'round') ctxRef.ellipse(0, 0, 22, 18, 0, 0, Math.PI * 2); else if (type === 'long') ctxRef.ellipse(0, 0, 30, 8, 0, 0, Math.PI * 2); else ctxRef.ellipse(0, 0, 25, 12, 0, 0, Math.PI * 2); ctxRef.fill(); ctxRef.stroke();
+            ctxRef.fillStyle = '#fff'; ctxRef.beginPath(); ctxRef.arc(type==='long'?20:15, -3, 3, 0, Math.PI*2); ctxRef.fill(); ctxRef.fillStyle = '#000'; ctxRef.beginPath(); ctxRef.arc(type==='long'?21:16, -3, 1.5, 0, Math.PI*2); ctxRef.fill();
+        } else if (type === 'sturgeon') {
+            ctxRef.beginPath(); ctxRef.moveTo(-25, 0); ctxRef.lineTo(-50, -20); ctxRef.lineTo(-40, 0); ctxRef.lineTo(-45, 12); ctxRef.closePath(); ctxRef.fill(); ctxRef.stroke(); ctxRef.beginPath(); ctxRef.moveTo(35, 0); ctxRef.quadraticCurveTo(10, -12, -30, -5); ctxRef.quadraticCurveTo(-30, 5, 10, 8); ctxRef.closePath(); ctxRef.fill(); ctxRef.stroke();
+            ctxRef.fillStyle = '#fff'; ctxRef.beginPath(); ctxRef.arc(20, -3, 2.5, 0, Math.PI*2); ctxRef.fill(); ctxRef.fillStyle = '#000'; ctxRef.beginPath(); ctxRef.arc(20.5, -3, 1.5, 0, Math.PI*2); ctxRef.fill();
+            ctxRef.fillStyle = '#e5e7eb'; ctxRef.strokeStyle = '#6b7280'; ctxRef.lineWidth = 1; for(let i=-20; i<15; i+=8) { ctxRef.beginPath(); ctxRef.moveTo(i, -9+(i/20)*2); ctxRef.lineTo(i+3, -13+(i/20)*2); ctxRef.lineTo(i+6, -9+(i/20)*2); ctxRef.fill(); ctxRef.stroke(); }
+        } else if (type === 'shark') {
+            ctxRef.fillStyle = '#94a3b8'; ctxRef.beginPath(); ctxRef.moveTo(0, -10); ctxRef.lineTo(-10, -25); ctxRef.lineTo(15, -5); ctxRef.fill(); ctxRef.stroke(); ctxRef.beginPath(); ctxRef.moveTo(-25, 0); ctxRef.lineTo(-45, -20); ctxRef.lineTo(-35, 0); ctxRef.lineTo(-45, 20); ctxRef.fill(); ctxRef.stroke(); ctxRef.ellipse(0, 0, 30, 10, 0, 0, Math.PI*2); ctxRef.fill(); ctxRef.stroke(); ctxRef.fillStyle = '#000'; ctxRef.beginPath(); ctxRef.arc(20, -2, 2, 0, Math.PI*2); ctxRef.fill(); ctxRef.beginPath(); ctxRef.moveTo(25, 5); ctxRef.lineTo(10, 8); ctxRef.stroke(); 
+        } else if (type === 'squid') {
+            ctxRef.fillStyle = fillColor; ctxRef.beginPath(); ctxRef.moveTo(-20, -15); ctxRef.lineTo(-30, 0); ctxRef.lineTo(-20, 15); ctxRef.lineTo(15, 0); ctxRef.fill(); ctxRef.stroke(); ctxRef.beginPath(); ctxRef.moveTo(-25, 0); ctxRef.lineTo(-40, -10); ctxRef.lineTo(-35, 0); ctxRef.lineTo(-40, 10); ctxRef.fill(); ctxRef.stroke(); ctxRef.strokeStyle = fillColor; ctxRef.lineWidth = 3; for(let i=-10; i<=10; i+=5) { ctxRef.beginPath(); ctxRef.moveTo(15, i); ctxRef.quadraticCurveTo(25, i+Math.sin(time*0.1)*10, 35, i); ctxRef.stroke(); } ctxRef.fillStyle = '#fff'; ctxRef.beginPath(); ctxRef.arc(5, -5, 4, 0, Math.PI*2); ctxRef.fill(); ctxRef.fillStyle='#000'; ctxRef.beginPath(); ctxRef.arc(6, -5, 2, 0, Math.PI*2); ctxRef.fill();
+        } else if (type === 'octopus') {
+            ctxRef.fillStyle = fillColor; ctxRef.beginPath(); ctxRef.arc(0, -10, 15, 0, Math.PI*2); ctxRef.fill(); ctxRef.stroke(); ctxRef.lineWidth = 6; ctxRef.strokeStyle = fillColor; for(let i=0; i<6; i++) { ctxRef.beginPath(); ctxRef.moveTo(i*4-10, 2); ctxRef.quadraticCurveTo(i*5-10, 20+Math.sin(time*0.05+i)*10, i*8-20, 30); ctxRef.stroke(); } ctxRef.fillStyle = '#fff'; ctxRef.beginPath(); ctxRef.arc(-5, -5, 3, 0, Math.PI*2); ctxRef.fill(); ctxRef.beginPath(); ctxRef.arc(5, -5, 3, 0, Math.PI*2); ctxRef.fill();
+        } else if (type === 'eel') {
+            ctxRef.beginPath(); for(let i=-40; i<=20; i++) { let ptX = i, ptY = Math.sin((i+time*0.05)*0.2)*6; if(i===-40) ctxRef.moveTo(ptX, ptY); else ctxRef.lineTo(ptX, ptY); } ctxRef.lineCap = 'round'; ctxRef.lineWidth = 14; ctxRef.strokeStyle = grad; ctxRef.stroke(); ctxRef.fillStyle = '#000'; ctxRef.beginPath(); ctxRef.arc(18, Math.sin((20+time*0.05)*0.2)*6 - 2, 3.5, 0, Math.PI*2); ctxRef.fill();
+        } else if (type === 'angler') {
+            ctxRef.beginPath(); ctxRef.moveTo(-15, 0); ctxRef.lineTo(-35, -15); ctxRef.lineTo(-35, 15); ctxRef.fill(); ctxRef.stroke(); ctxRef.beginPath(); ctxRef.arc(0, 0, 22, 0, Math.PI*2); ctxRef.fill(); ctxRef.stroke(); ctxRef.fillStyle = '#000'; ctxRef.beginPath(); ctxRef.arc(8, 8, 16, 0, Math.PI); ctxRef.fill(); ctxRef.beginPath(); ctxRef.moveTo(5, -15); ctxRef.quadraticCurveTo(20, -40, 35, -15); ctxRef.strokeStyle = '#4b5563'; ctxRef.lineWidth=2; ctxRef.stroke(); ctxRef.beginPath(); ctxRef.arc(35, -15, 6, 0, Math.PI*2); ctxRef.fillStyle = '#0ff'; ctxRef.fill();
+        } else if (type === 'leviathan') {
+            const levGrad = ctxRef.createLinearGradient(-40, -15, 40, 15); levGrad.addColorStop(0, '#064e3b'); levGrad.addColorStop(1, '#022c22'); ctxRef.fillStyle = levGrad; ctxRef.beginPath(); ctxRef.moveTo(-35, 0); ctxRef.lineTo(-60, -25); ctxRef.lineTo(-50, 0); ctxRef.lineTo(-60, 25); ctxRef.fill(); ctxRef.stroke(); ctxRef.ellipse(0, 0, 45, 16, 0, 0, Math.PI * 2); ctxRef.fill(); ctxRef.stroke(); ctxRef.fillStyle = '#a7f3d0'; for(let i=-25; i<25; i+=15) { ctxRef.beginPath(); ctxRef.ellipse(i, 0, 2, 8, Math.PI/8, 0, Math.PI*2); ctxRef.fill(); } ctxRef.strokeStyle = '#022c22'; ctxRef.lineWidth = 2; ctxRef.beginPath(); ctxRef.moveTo(45, 0); ctxRef.lineTo(20, 8); ctxRef.stroke();
+        }
+        ctxRef.restore();
+    }
+
+    // --- Game Loop ---
+    let lastTime = 0;
+
+    function gameLoop(timestamp) {
+        const dt = timestamp - lastTime; lastTime = timestamp;
+
+        if (audioState.initialized && !audioState.muted) {
+            audioState.ambientFilter.frequency.value = (state.isStorm ? 800 : 300) + Math.sin(timestamp * 0.001) * 200;
+            audioState.nightGain.gain.value += ((state.isDay ? 0 : 0.15) - audioState.nightGain.gain.value) * 0.01;
+            scheduleMusic();
+        }
+
+        const w = canvas.width / (window.devicePixelRatio||1); const h = canvas.height / (window.devicePixelRatio||1);
+
+        // Ambient Fish
+        if (Math.random() < 0.015 && state.ambientFish.length < 15) {
+            const isLeft = Math.random() > 0.5;
+            const fishTypes = state.currentLocation === 0 ? ['standard', 'long', 'round'] : ['shark', 'eel', 'squid', 'angler'];
+            state.ambientFish.push({
+                x: (isLeft ? -50 : w + 50) + (Math.random()*30 - 15), y: h * 0.3 + Math.random() * (h * 0.5) + (Math.random()*20 - 10),
+                speed: (0.1 + Math.random() * 0.3) * (isLeft ? 1 : -1), size: 10 + Math.random() * 10, 
+                color: state.isDay ? '#3b82f6' : '#1e3a8a', shape: fishTypes[Math.floor(Math.random()*fishTypes.length)], id: Math.random()
+            });
+        }
+        for (let i = state.ambientFish.length - 1; i >= 0; i--) {
+            const f = state.ambientFish[i]; f.x += f.speed; if (f.x < -100 || f.x > w + 100) state.ambientFish.splice(i, 1);
+        }
+
+        if(timestamp % 60 < 16) {
+            state.gameTime += state.timeSpeed; if(state.gameTime >= 24 * 60) state.gameTime = 0;
+            const hours = Math.floor(state.gameTime / 60); const wasDay = state.isDay; state.isDay = (hours >= 6 && hours < 18);
+            
+            if (state.gameTime % 60 < state.timeSpeed) {
+                if(Math.random() < 0.1) { 
+                    state.isStorm = !state.isStorm; container.classList.toggle('storm', state.isStorm); 
+                    if(state.isStorm) showNotification("BADAI DATANG!", "ph-cloud-lightning", "bg-red-600/90", "border-red-400/50");
+                    else showNotification("BADAI REDA", "ph-sun", "bg-sky-500/90", "border-sky-300/50");
+                }
+            }
+
+            if(wasDay !== state.isDay) {
+                if(state.isDay) { container.classList.remove('night'); timeDisplay.className = "bg-[#fef3c7] text-[#b45309] px-3 py-2 rounded-2xl text-[10px] font-black tracking-widest uppercase shadow-lg border-b-4 border-black/10 flex items-center gap-1.5 transition-colors duration-1000"; timeText.innerText = "SIANG"; timeIcon.className = "ph-bold ph-sun text-base"; } 
+                else { container.classList.add('night'); timeDisplay.className = "bg-[#1e1b4b] text-[#818cf8] px-3 py-2 rounded-2xl text-[10px] font-black tracking-widest uppercase shadow-lg border-b-4 border-black/20 flex items-center gap-1.5 transition-colors duration-1000"; timeText.innerText = "MALAM"; timeIcon.className = "ph-bold ph-moon text-base"; }
+            }
+        }
+
+        let hookX = 0, hookY = 0, rodTipLocalY = (h * 0.2 - 60) - (h * 0.22) + 10;
+
+        if (state.mode === GAME_STATE.CASTING) {
+            state.hookDepth += 2; depthIndicator.style.top = `${(state.hookDepth / state.stats.maxDepth)*100}%`;
+            if(state.hookDepth >= state.targetDepth || state.isReeling) { 
+                state.mode = GAME_STATE.WAITING; 
+                let waitMod = state.activeBait === 'cacing' ? 0.3 : (state.isStorm ? 0.5 : 1);
+                state.waitTimer = (Math.random() * 100 + 50) * waitMod; 
+            }
+        } else if (state.mode === GAME_STATE.WAITING) {
+            if (state.waitTimer < 30) rodTipLocalY += Math.sin(timestamp * 0.5) * 5; // Bite anticipation twitch
+            if(state.isReeling) {
+                state.hookDepth -= state.stats.rodPower; depthIndicator.style.top = `${(state.hookDepth / state.stats.maxDepth)*100}%`;
+                if(timestamp - audioState.lastReelClick > 200) { playSfx('reel'); audioState.lastReelClick = timestamp; }
+                if(state.hookDepth <= 0) { resetToIdle(); actionText.innerText = "LEMPAR"; actionIcon.className = "ph-bold ph-anchor text-[2rem] mb-0.5 text-[#0f172a]"; }
+            } else { state.waitTimer--; if(state.waitTimer <= 0) hookFish(); }
+        } else if (state.mode === GAME_STATE.FISHING) {
+            const f = state.currentFish;
+            const inSweetSpot = state.tension > 40 && state.tension < 70;
+            const reelMultiplier = inSweetSpot ? 1.5 : 1;
+            
+            // Fish Stamina Logic
+            if (state.isReeling && inSweetSpot) f.currentStamina -= 0.5;
+            const exhausted = f.currentStamina <= 0;
+            const pForce = exhausted ? 0.1 : f.pullForce;
+            const errMod = exhausted ? 0 : f.erratic;
+
+            // Directional Pull Logic (Epic/Legendary)
+            if (!exhausted && !state.directionalPull && f.mass >= 80 && Math.random() < 0.005) {
+                state.directionalPull = Math.random() > 0.5 ? 'KIRI' : 'KANAN'; state.pullTimer = 80;
+                document.getElementById('dirWarning').style.opacity = 1;
+                document.getElementById('dirIcon').className = state.directionalPull === 'KIRI' ? 'ph-bold ph-arrow-fat-lines-left text-6xl animate-pulse' : 'ph-bold ph-arrow-fat-lines-right text-6xl animate-pulse';
+                playSfx('alert');
+            }
+            
+            if (state.directionalPull) {
+                state.pullTimer--;
+                if (state.isReeling) state.tension += 2; // Massive penalty
+                if (state.pullTimer <= 0) { state.directionalPull = null; document.getElementById('dirWarning').style.opacity = 0; }
+            }
+            
+            if (state.isReeling) {
+                state.hookDepth -= (state.stats.rodPower * reelMultiplier); depthIndicator.style.top = `${(state.hookDepth / state.stats.maxDepth)*100}%`;
+                state.tension += (state.stats.tensionBuild * pForce * (state.isStorm?1.2:1));
+                if(timestamp - audioState.lastReelClick > (inSweetSpot?100:150)) { playSfx('reel'); audioState.lastReelClick = timestamp; }
+                if (inSweetSpot && Math.random() < 0.1) { spawnText("SEMPURNA!", w*0.3 + Math.random()*20, h*0.4 + Math.random()*20, "#34d399"); if (Math.random() < 0.2) playSfx('perfect'); }
+            } else {
+                state.hookDepth += pForce; state.tension -= state.stats.tensionRecovery;
+            }
+
+            if (Math.random() < errMod) { state.tension += f.spike; container.classList.add('shake'); setTimeout(() => container.classList.remove('shake'), 50); }
+            state.tension = Math.max(0, state.tension);
+            
+            if (state.tension >= 100) snapLine("Tarikan terlalu kuat! Ikan berhasil kabur.");
+            else if (state.hookDepth <= 0) catchFish();
+
+            document.getElementById('tensionBar').style.height = `${state.tension}%`;
+            document.getElementById('staminaBar').style.height = `${Math.max(0, (f.currentStamina/f.stamina)*100)}%`;
+            
+            if(state.tension > 85) { tensionWarning.classList.remove('hidden'); document.getElementById('tensionBar').style.background = "linear-gradient(to top, #ef4444, #b91c1c)"; container.classList.add('shake-heavy'); }
+            else if (state.tension > 70) { tensionWarning.classList.remove('hidden'); document.getElementById('tensionBar').style.background = "linear-gradient(to top, #34d399 0%, #fbbf24 50%, #ef4444 100%)"; container.classList.remove('shake-heavy'); }
+            else { tensionWarning.classList.add('hidden'); document.getElementById('tensionBar').style.background = "linear-gradient(to top, #34d399 0%, #fbbf24 80%, #ef4444 100%)"; container.classList.remove('shake-heavy'); }
+        } else { container.classList.remove('shake-heavy'); }
+
+        // --- Render Background ---
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = state.isStorm ? cachedGradients.storm : (state.isDay ? cachedGradients.day : cachedGradients.night);
+        ctx.fillRect(0, h * 0.22, w, h * 0.78);
+
+        // Parallax Sun/Moon
+        if (!state.isStorm) {
+            const timeProgress = (state.gameTime % (12 * 60)) / (12 * 60); 
+            ctx.fillStyle = state.isDay ? '#fde047' : '#e2e8f0';
+            ctx.beginPath(); ctx.arc(w * timeProgress, (h * 0.22) - Math.sin(timeProgress * Math.PI) * 120, 20, 0, Math.PI*2); ctx.fill();
+        }
+
+        // Plankton
+        state.particles.forEach(p => {
+            p.y -= p.speed * h; if(p.y < h * 0.22) { p.y = h; p.x = Math.random(); }
+            ctx.fillStyle = state.isDay && !state.isStorm ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)';
+            ctx.beginPath(); ctx.arc(p.x * w, p.y, p.size, 0, Math.PI*2); ctx.fill();
+        });
+
+        // Ambient Background Fish
+        state.ambientFish.forEach(f => {
+            const sprite = getFishSprite(f.type, f.color, f.shape);
+            ctx.save(); ctx.translate(f.x, f.y + Math.sin(f.x*0.05 + timestamp*0.002)*10);
+            if (f.speed < 0) ctx.scale(-1, 1);
+            const scale = f.size / 15; ctx.scale(scale, scale);
+            ctx.rotate(Math.sin(timestamp * 0.005 + f.id) * 0.1);
+            ctx.drawImage(sprite, -60, -60);
+            ctx.restore();
+        });
+
+        // Storm Rain & Lightning
+        if (state.isStorm) {
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1.5; ctx.beginPath();
+            for(let i=0; i<30; i++) { let rx = Math.random() * w; let ry = Math.random() * h; ctx.moveTo(rx, ry); ctx.lineTo(rx - 15, ry + 40); } ctx.stroke();
+            if (Math.random() < 0.015) { ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(0,0,w,h); }
+        }
+
+        // Looming Shadows
+        const boatX = w * 0.5, boatY = h * 0.22;
+        if (state.mode === GAME_STATE.FISHING && state.currentFish) {
+            const prog = 1 - (state.hookDepth / state.targetDepth);
+            if (prog > 0.6) {
+                const sSize = state.currentFish.mass * prog * 2;
+                ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(boatX, boatY + 60, sSize, sSize * 0.4, 0, 0, Math.PI*2); ctx.fill();
+            }
+        }
+
+        ctx.fillStyle = state.isDay && !state.isStorm ? '#0369a1' : '#020617'; ctx.fillRect(0, h * 0.22, w, 2);
+
+        // --- Boat & Emoji Fisherman ---
+        ctx.save(); ctx.translate(boatX, boatY + Math.sin(timestamp*0.002)*2);
+        
+        ctx.fillStyle = state.isDay && !state.isStorm ? '#5c3a21' : '#29180c'; ctx.beginPath(); ctx.moveTo(-50, 0); ctx.lineTo(50, 0); ctx.lineTo(30, 15); ctx.lineTo(-40, 15); ctx.fill();
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(-35, -12, 18, 12);
+
+        ctx.font = "36px 'Nunito', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("­Ъца", 2, -18);
+
+        const pRot = (state.mode===GAME_STATE.CASTING) ? -0.3 : (state.mode===GAME_STATE.FISHING ? (state.isReeling ? Math.sin(timestamp*0.05)*0.3 : -0.15) : 0);
+        ctx.save(); ctx.translate(2, -10); ctx.rotate(pRot);
+        
+        ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(20, 5); ctx.stroke(); // Arm
+        
+        const rodTipLocalX = (w * 0.35) - boatX - 2; 
+        ctx.strokeStyle = RODS_DB[state.currentRodIndex].color; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(-7, 10); ctx.lineTo(20, 5); ctx.lineTo(rodTipLocalX, rodTipLocalY); ctx.stroke(); // Rod
+        ctx.restore(); ctx.restore();
+
+        if (state.mode !== GAME_STATE.IDLE) {
+            const cx = 2, cy = -10; const rx = rodTipLocalX - cx, ry = rodTipLocalY - cy;
+            const rotX = rx * Math.cos(pRot) - ry * Math.sin(pRot) + cx; const rotY = rx * Math.sin(pRot) + ry * Math.cos(pRot) + cy;
+            const rodTipX = boatX + rotX; const rodTipY = boatY + Math.sin(timestamp*0.002)*2 + rotY;
+
+            const visualDepthRatio = Math.min(1, state.hookDepth / state.stats.maxDepth);
+            let sway = 0;
+            if (state.mode === GAME_STATE.WAITING) sway = Math.sin(timestamp * 0.001) * 20; 
+            else if (state.mode === GAME_STATE.CASTING) sway = Math.sin(timestamp * 0.003) * 35;
+            else if (state.mode === GAME_STATE.FISHING) {
+                if(state.directionalPull === 'KIRI') sway = -50; else if(state.directionalPull === 'KANAN') sway = 50;
+                else sway = state.isReeling ? Math.sin(timestamp * 0.02) * 5 : Math.sin(timestamp * 0.01) * 15;
+            }
+            
+            hookX = rodTipX + sway; hookY = h * 0.22 + (h * 0.7 * visualDepthRatio); 
+
+            ctx.strokeStyle = state.tension > 85 ? '#ef4444' : (state.isDay && !state.isStorm ? '#94a3b8' : '#4b5563');
+            ctx.lineWidth = state.tension > 85 ? 2 : 1.5; ctx.beginPath(); ctx.moveTo(rodTipX, rodTipY);
+            
+            if (state.tension > 80 && state.mode === GAME_STATE.FISHING) {
+                ctx.lineTo(hookX + (Math.random()*6-3), hookY / 2); ctx.lineTo(hookX, hookY);
+            } else {
+                let sag = 0;
+                if (state.mode === GAME_STATE.WAITING) sag = 20 + Math.sin(timestamp * 0.002) * 5;
+                else if (state.mode === GAME_STATE.CASTING) sag = -15; 
+                else if (state.mode === GAME_STATE.FISHING) sag = state.isReeling ? -2 : 5;
+                ctx.quadraticCurveTo(rodTipX + (hookX - rodTipX) / 2, rodTipY + (hookY - rodTipY) / 2 + sag, hookX, hookY);
+            }
+            ctx.stroke();
+
+            ctx.fillStyle = state.activeBait ? '#a855f7' : '#94a3b8';
+            ctx.beginPath(); ctx.arc(hookX, hookY, state.activeBait?6:4, 0, Math.PI * 2); ctx.fill();
+
+            if (state.mode === GAME_STATE.FISHING && state.currentFish) {
+                const fishSize = Math.max(20, Math.min(60, state.currentFish.mass));
+                ctx.save(); ctx.translate(hookX + (state.isReeling?(Math.random()*4-2):0), hookY + 15);
+                const s = fishSize / 25; ctx.scale(s, s);
+                ctx.rotate(-Math.PI/2 + Math.sin(timestamp * 0.05) * 0.2); 
+                drawDetailedFish(ctx, state.currentFish.type, state.currentFish.color, 0, 0, 50, timestamp);
+                ctx.restore();
+            }
+        }
+
+        for (let i = state.floatingTexts.length - 1; i >= 0; i--) {
+            const ft = state.floatingTexts[i]; ft.age++; ft.y -= 0.5;
+            ctx.globalAlpha = Math.max(0, 1 - (ft.age / ft.life));
+            ctx.fillStyle = ft.color; ctx.font = "bold 16px 'Nunito', sans-serif";
+            ctx.textAlign = "center"; ctx.fillText(ft.text, ft.x, ft.y);
+            if (ft.age >= ft.life) state.floatingTexts.splice(i, 1);
+        }
+        ctx.globalAlpha = 1;
+
+        requestAnimationFrame(gameLoop);
+    }
+    requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>
