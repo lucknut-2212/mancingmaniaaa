@@ -512,7 +512,9 @@
 
     document.getElementById('startBtn').addEventListener('click', () => {
         document.getElementById('introScreen').style.opacity = 0; setTimeout(() => document.getElementById('introScreen').style.display = 'none', 800);
-        if(!audioState.initialized) initAudio(); loadGame(); updateMapUI();
+        if(!audioState.initialized) initAudio(); 
+        if(audioState.ctx && audioState.ctx.state === 'suspended') audioState.ctx.resume();
+        loadGame(); updateMapUI();
     });
 
     const cachedGradients = { day: null, night: null, storm: null };
@@ -538,15 +540,33 @@
     window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
     const startReel = (e) => {
-        if(e.cancelable) e.preventDefault(); if(!audioState.initialized && !audioState.muted) initAudio();
+        if(e && e.cancelable) e.preventDefault(); 
+        if(!audioState.initialized && !audioState.muted) initAudio();
+        if(audioState.ctx && audioState.ctx.state === 'suspended') audioState.ctx.resume();
+        
         if(state.mode === GAME_STATE.IDLE) castLine();
-        else if (state.mode !== GAME_STATE.IDLE) { state.isReeling = true; actionBtn.style.transform = "translateY(6px)"; actionBtn.style.boxShadow = "0 0px 0 #020617"; actionBtn.classList.replace('bg-white', 'bg-slate-200'); }
+        else if (state.mode !== GAME_STATE.IDLE) { 
+            state.isReeling = true; 
+            actionBtn.style.transform = "translateY(6px)"; 
+            actionBtn.style.boxShadow = "0 0px 0 #020617"; 
+            actionBtn.classList.replace('bg-white', 'bg-slate-200'); 
+        }
     };
+    
     const stopReel = (e) => {
-        if(e.cancelable) e.preventDefault(); state.isReeling = false; actionBtn.style.transform = "translateY(0)"; actionBtn.style.boxShadow = "0 6px 0 #020617"; actionBtn.classList.replace('bg-slate-200', 'bg-white');
+        if(e && e.cancelable) e.preventDefault(); 
+        state.isReeling = false; 
+        actionBtn.style.transform = "translateY(0)"; 
+        actionBtn.style.boxShadow = "0 6px 0 #020617"; 
+        actionBtn.classList.replace('bg-slate-200', 'bg-white');
     };
-    actionBtn.addEventListener('mousedown', startReel); actionBtn.addEventListener('touchstart', startReel, {passive: false});
-    window.addEventListener('mouseup', stopReel); window.addEventListener('touchend', stopReel);
+
+    // Fix for Mobile Touch issues using universal Pointer Events
+    actionBtn.addEventListener('pointerdown', startReel); 
+    window.addEventListener('pointerup', stopReel); 
+    window.addEventListener('pointercancel', stopReel);
+    actionBtn.addEventListener('contextmenu', e => e.preventDefault()); // Stop long press issues on mobile
+
     document.getElementById('modalBtn').addEventListener('click', () => { closeModal('messageModal'); resetToIdle(); });
 
     // Menu Interactions
@@ -1000,7 +1020,8 @@
         ctx.fillStyle = state.isDay && !state.isStorm ? '#5c3a21' : '#29180c'; ctx.beginPath(); ctx.moveTo(-50, 0); ctx.lineTo(50, 0); ctx.lineTo(30, 15); ctx.lineTo(-40, 15); ctx.fill();
         ctx.fillStyle = '#1e293b'; ctx.fillRect(-35, -12, 18, 12);
 
-        ctx.font = "36px 'Nunito', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("­Ъца", 2, -18);
+        // Fixed Corrupted Emoji (mojibake replaced with universal emoji)
+        ctx.font = "36px 'Nunito', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("🤠", 2, -18);
 
         const pRot = (state.mode===GAME_STATE.CASTING) ? -0.3 : (state.mode===GAME_STATE.FISHING ? (state.isReeling ? Math.sin(timestamp*0.05)*0.3 : -0.15) : 0);
         ctx.save(); ctx.translate(2, -10); ctx.rotate(pRot);
