@@ -419,38 +419,46 @@
             list.innerHTML = '<div class="text-center text-slate-400 py-8 font-bold text-xs animate-pulse flex flex-col items-center justify-center gap-2 h-full"><i class="ph-bold ph-spinner animate-spin text-2xl"></i> Memuat data terbaru...</div>';
         }
         
-        fetch(GAS_URL)
-            .then(res => res.json())
-            .then(data => {
-                list.innerHTML = '';
-                if(data.length === 0) {
-                    list.innerHTML = '<div class="text-center text-slate-400 py-4 font-bold text-sm">Belum ada skor tercatat.</div>';
-                    return;
-                }
-                data.forEach((entry, idx) => {
-                    let medal = '';
-                    if(idx===0) medal = '<i class="ph-fill ph-medal text-yellow-400 text-2xl drop-shadow-[0_0_5px_#facc15]"></i>';
-                    else if(idx===1) medal = '<i class="ph-fill ph-medal text-slate-300 text-2xl"></i>';
-                    else if(idx===2) medal = '<i class="ph-fill ph-medal text-amber-600 text-2xl"></i>';
-                    else medal = `<span class="text-slate-500 font-black text-base w-6 text-center">${idx+1}</span>`;
-                    
-                    let isCurrentPlayer = (targetId === 'gameOverLeaderboardList' && entry.nama === state.playerName && entry.score == Math.floor(state.score));
-                    let bgClass = isCurrentPlayer ? 'bg-sky-900/50 border-sky-500/50' : 'bg-[#0f172a] border-slate-700/50';
+        // Cache busting agar selalu mengambil data ter-update
+        fetch(GAS_URL + "?t=" + new Date().getTime())
+            .then(res => res.text()) // Parse sebagai teks dulu untuk melokalisir error
+            .then(text => {
+                try {
+                    const data = JSON.parse(text);
+                    list.innerHTML = '';
+                    if(data.length === 0) {
+                        list.innerHTML = '<div class="text-center text-slate-400 py-4 font-bold text-sm">Belum ada skor tercatat.</div>';
+                        return;
+                    }
+                    data.forEach((entry, idx) => {
+                        let medal = '';
+                        if(idx===0) medal = '<i class="ph-fill ph-medal text-yellow-400 text-2xl drop-shadow-[0_0_5px_#facc15]"></i>';
+                        else if(idx===1) medal = '<i class="ph-fill ph-medal text-slate-300 text-2xl"></i>';
+                        else if(idx===2) medal = '<i class="ph-fill ph-medal text-amber-600 text-2xl"></i>';
+                        else medal = `<span class="text-slate-500 font-black text-base w-6 text-center">${idx+1}</span>`;
+                        
+                        let isCurrentPlayer = (targetId === 'gameOverLeaderboardList' && entry.nama === state.playerName && entry.score == Math.floor(state.score));
+                        let bgClass = isCurrentPlayer ? 'bg-sky-900/50 border-sky-500/50' : 'bg-[#0f172a] border-slate-700/50';
 
-                    list.innerHTML += `
-                        <div class="${bgClass} rounded-2xl p-3 flex justify-between items-center border shrink-0">
-                            <div class="flex items-center gap-3">
-                                ${medal}
-                                <div class="font-black text-white uppercase text-sm">${entry.nama}</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-emerald-400 font-black text-sm">${entry.score} <span class="text-[10px] text-emerald-600">PTS</span></div>
-                                <div class="text-[9px] text-slate-500 font-bold">${entry.time} Menit</div>
-                            </div>
-                        </div>`;
-                });
+                        list.innerHTML += `
+                            <div class="${bgClass} rounded-2xl p-3 flex justify-between items-center border shrink-0">
+                                <div class="flex items-center gap-3">
+                                    ${medal}
+                                    <div class="font-black text-white uppercase text-sm">${entry.nama}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-emerald-400 font-black text-sm">${entry.score} <span class="text-[10px] text-emerald-600">PTS</span></div>
+                                    <div class="text-[9px] text-slate-500 font-bold">${entry.time} Menit</div>
+                                </div>
+                            </div>`;
+                    });
+                } catch(e) {
+                    console.error("Format data dari Google Apps Script salah (Bukan JSON):", text);
+                    list.innerHTML = '<div class="text-center text-red-400 py-4 font-bold text-xs">Gagal membaca data.<br>Pastikan Apps Script di Deploy "Versi Baru".</div>';
+                }
             })
             .catch(err => {
+                console.error("Error Fetching Leaderboard:", err);
                 list.innerHTML = '<div class="text-center text-red-400 py-4 font-bold text-sm">Gagal memuat papan skor.</div>';
             });
     }
@@ -473,10 +481,12 @@
 
         if(list) list.innerHTML = '<div class="text-center text-slate-400 py-8 font-bold text-xs animate-pulse flex flex-col items-center justify-center gap-2 h-full"><i class="ph-bold ph-spinner animate-spin text-2xl"></i> Menyimpan skormu...</div>';
 
-        fetch(GAS_URL, { method: 'POST', body: formData })
+        // Menggunakan mode "no-cors" untuk membypass aturan security browser ke Google Script
+        fetch(GAS_URL, { method: 'POST', body: formData, mode: 'no-cors' })
             .then(res => {
                 console.log("Skor terkirim ke Google Sheets!");
-                fetchLeaderboard('gameOverLeaderboardList'); // Refresh the list
+                // Beri waktu 1.5 detik ke Google Sheet untuk update tabel, lalu ambil datanya
+                setTimeout(() => fetchLeaderboard('gameOverLeaderboardList'), 1500); 
             })
             .catch(err => {
                 console.error("Gagal mengirim skor:", err);
