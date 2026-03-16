@@ -74,15 +74,28 @@
         <p class="text-slate-400 mb-8 max-w-xs text-center text-sm font-medium leading-relaxed">Kejar skor target sebelum 90 detik! Tangkap ikan besar, upgrade alatmu, dan capai skor tertinggi.</p>
         
         <div class="flex flex-col gap-3 w-full px-12">
-            <!-- Name Input Field -->
-            <input type="text" id="playerNameInput" placeholder="NAMA KAMU..." maxlength="15" class="w-full bg-[#1e293b] text-white px-4 py-4 rounded-3xl border-4 border-[#334155] focus:border-sky-500 outline-none font-black text-center uppercase tracking-widest placeholder-slate-500 shadow-inner transition-colors">
-            
             <button id="startBtn" class="bg-emerald-500 active:bg-emerald-600 text-white py-4 rounded-3xl font-black text-xl shadow-[0_6px_0_#065f46] active:shadow-none active:translate-y-[6px] transition-all tracking-widest w-full mt-2">MAIN SEKARANG</button>
             <button onclick="openModal('donasiModal')" class="bg-[#1e293b] text-orange-400 py-3 rounded-3xl font-bold text-sm border-2 border-orange-500/50 shadow-lg active:translate-y-1 transition-all w-full flex items-center justify-center gap-2">
                 <i class="ph-bold ph-coffee text-xl"></i> DUKUNG CREATOR
             </button>
         </div>
         <div class="absolute bottom-6 text-slate-600 font-bold tracking-[0.3em] text-xs">LEADERBOARD EDITION</div>
+    </div>
+
+    <!-- Leaderboard & Name Modal (Muncul Setelah Klik Main) -->
+    <div id="leaderboardModal" class="modal-overlay absolute inset-0 bg-[#0f172a]/95 z-50 flex flex-col items-center p-6 backdrop-blur-md">
+        <div class="modal-content w-full h-full max-w-md flex flex-col items-center pt-8 pb-4">
+            <h2 class="text-3xl font-black text-amber-400 mb-4 uppercase tracking-widest flex items-center gap-2"><i class="ph-bold ph-trophy"></i> Papan Skor</h2>
+            
+            <div class="w-full bg-[#1e293b] rounded-3xl border-4 border-[#334155] p-2 flex-1 overflow-y-auto flex flex-col gap-2 mb-4 shadow-inner relative" id="leaderboardList">
+                <div class="text-center text-slate-400 py-8 font-bold text-sm animate-pulse flex flex-col items-center gap-2"><i class="ph-bold ph-spinner animate-spin text-2xl"></i> Memuat data skor...</div>
+            </div>
+
+            <div class="w-full bg-slate-800 p-4 rounded-3xl border-2 border-slate-600 mb-2 shadow-lg">
+                <input type="text" id="playerNameInput" placeholder="NAMA KAMU..." maxlength="15" class="w-full bg-[#0f172a] text-white px-4 py-3 rounded-2xl border-2 border-[#334155] focus:border-sky-500 outline-none font-black text-center uppercase tracking-widest placeholder-slate-500 shadow-inner transition-colors mb-3">
+                <button id="startGameFinalBtn" class="bg-emerald-500 active:bg-emerald-600 text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#065f46] active:shadow-none active:translate-y-[6px] transition-all tracking-widest w-full">MULAI MEMANCING</button>
+            </div>
+        </div>
     </div>
 
     <!-- Top UI Bar -->
@@ -99,7 +112,7 @@
                     <span id="levelText" class="text-emerald-400">LVL 1</span>
                 </div>
                 <div class="text-[9px] text-slate-400 font-bold leading-none mb-1">SCORE:</div>
-                <div class="text-sm font-black text-white leading-none" id="xpText">0 / 300</div>
+                <div class="text-sm font-black text-white leading-none" id="xpText">0 / 350</div>
                 <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden mt-1.5">
                     <div id="xpBar" class="bg-emerald-400 h-full w-0 transition-all duration-500"></div>
                 </div>
@@ -144,22 +157,30 @@
     </div>
 
     <!-- Modals -->
-    <!-- Game Over Modal -->
-    <div id="gameOverModal" class="modal-overlay absolute inset-0 bg-black/90 z-50 flex flex-col justify-center items-center p-6 text-center backdrop-blur-md">
-        <div class="modal-content flex flex-col items-center w-full max-w-sm bg-[#1e293b] p-8 rounded-3xl border-4 border-red-500/50 shadow-[0_0_50px_rgba(239,68,68,0.3)]">
-            <i class="ph-fill ph-skull text-7xl text-red-500 mb-2 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]"></i>
-            <h2 class="text-4xl font-black text-white mb-2 uppercase tracking-widest drop-shadow-lg">WAKTU HABIS</h2>
-            <p class="text-slate-300 mb-6 text-sm font-medium leading-relaxed">Skor kamu tidak mencapai target level!</p>
+    <!-- Game Over & Leaderboard Modal -->
+    <div id="gameOverModal" class="modal-overlay absolute inset-0 bg-black/90 z-50 flex flex-col justify-center items-center p-4 text-center backdrop-blur-md">
+        <div class="modal-content flex flex-col items-center w-full max-w-sm bg-[#1e293b] p-5 rounded-3xl border-4 border-red-500/50 shadow-[0_0_50px_rgba(239,68,68,0.3)] max-h-[95vh] overflow-hidden flex flex-col">
             
-            <div class="w-full bg-slate-800 rounded-2xl p-5 mb-6 border-2 border-slate-700 shadow-inner">
-                <div class="text-sky-400 font-bold text-xs uppercase mb-1 tracking-widest">Total Skor Akhir</div>
-                <div class="text-5xl font-black text-white drop-shadow-lg" id="goScore">0</div>
-                <div class="h-px w-full bg-slate-700 my-4"></div>
-                <div class="text-emerald-400 font-bold text-xs uppercase mb-1 tracking-widest">Waktu Bertahan</div>
-                <div class="text-2xl font-black text-white" id="goTime">0 Menit</div>
+            <i class="ph-fill ph-skull text-4xl text-red-500 mb-1 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]"></i>
+            <h2 class="text-3xl font-black text-white mb-1 uppercase tracking-widest drop-shadow-lg">WAKTU HABIS</h2>
+            <p class="text-slate-300 mb-3 text-xs font-medium leading-relaxed">Skor kamu tidak mencapai target level!</p>
+            
+            <div class="w-full bg-slate-800 rounded-2xl p-4 mb-3 border-2 border-slate-700 shadow-inner flex justify-between items-center shrink-0">
+                <div>
+                    <div class="text-sky-400 font-bold text-[10px] uppercase mb-1 tracking-widest text-left">Skor Akhir</div>
+                    <div class="text-3xl font-black text-white drop-shadow-lg text-left" id="goScore">0</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-emerald-400 font-bold text-[10px] uppercase mb-1 tracking-widest">Waktu</div>
+                    <div class="text-xl font-black text-white" id="goTime">0 Menit</div>
+                </div>
             </div>
 
-            <button id="restartBtn" class="bg-red-600 active:bg-red-700 text-white px-8 py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#7f1d1d] active:translate-y-[6px] active:shadow-none w-full transition-all tracking-widest">MAIN LAGI</button>
+            <div class="w-full bg-[#0f172a] rounded-2xl border-2 border-[#334155] p-2 flex-1 overflow-y-auto flex flex-col gap-2 mb-4 shadow-inner min-h-[150px]" id="gameOverLeaderboardList">
+                <!-- Leaderboard entries will populate here -->
+            </div>
+
+            <button id="restartBtn" class="bg-red-600 active:bg-red-700 text-white px-8 py-3 rounded-2xl font-black text-lg shadow-[0_6px_0_#7f1d1d] active:translate-y-[6px] active:shadow-none w-full transition-all tracking-widest shrink-0">MAIN LAGI</button>
         </div>
     </div>
 
@@ -312,7 +333,7 @@
         isPlaying: false, isGameOver: false,
         playerName: "",
         money: 0, 
-        score: 0, targetScore: 300, level: 1, 
+        score: 0, targetScore: 350, level: 1, 
         levelTime: 90, totalTimePlayed: 0, // Dalam detik
         
         isDay: true, isStorm: false, gameTime: 8 * 60, timeSpeed: 0.5, 
@@ -356,7 +377,15 @@
         }
     }
 
-    function getTargetForLevel(lvl) { return lvl * 300; }
+    // Skor gradual: Level 1 = 350. Level 2 = 350 + (350 + 50) = 750. Level 3 = 750 + (350 + 100) = 1200.
+    function getTargetForLevel(lvl) { 
+        let target = 0;
+        for(let i=1; i<=lvl; i++) {
+            if (i === 1) target += 350;
+            else target += 350 + (50 * (i - 1));
+        }
+        return target; 
+    }
     
     function addScore(amount) {
         state.score += amount;
@@ -377,9 +406,61 @@
         }
     }
 
+    function fetchLeaderboard(targetId = 'leaderboardList') {
+        const list = document.getElementById(targetId);
+        if (!list) return;
+
+        if (!GAS_URL || GAS_URL.includes("URL_GOOGLE_APPS_SCRIPT")) {
+            list.innerHTML = '<div class="text-center text-slate-400 py-4 font-bold text-xs">URL Apps Script belum diatur.<br>Papan skor offline.</div>';
+            return;
+        }
+        
+        if(targetId === 'gameOverLeaderboardList') {
+            list.innerHTML = '<div class="text-center text-slate-400 py-8 font-bold text-xs animate-pulse flex flex-col items-center justify-center gap-2 h-full"><i class="ph-bold ph-spinner animate-spin text-2xl"></i> Memuat data terbaru...</div>';
+        }
+        
+        fetch(GAS_URL)
+            .then(res => res.json())
+            .then(data => {
+                list.innerHTML = '';
+                if(data.length === 0) {
+                    list.innerHTML = '<div class="text-center text-slate-400 py-4 font-bold text-sm">Belum ada skor tercatat.</div>';
+                    return;
+                }
+                data.forEach((entry, idx) => {
+                    let medal = '';
+                    if(idx===0) medal = '<i class="ph-fill ph-medal text-yellow-400 text-2xl drop-shadow-[0_0_5px_#facc15]"></i>';
+                    else if(idx===1) medal = '<i class="ph-fill ph-medal text-slate-300 text-2xl"></i>';
+                    else if(idx===2) medal = '<i class="ph-fill ph-medal text-amber-600 text-2xl"></i>';
+                    else medal = `<span class="text-slate-500 font-black text-base w-6 text-center">${idx+1}</span>`;
+                    
+                    let isCurrentPlayer = (targetId === 'gameOverLeaderboardList' && entry.nama === state.playerName && entry.score == Math.floor(state.score));
+                    let bgClass = isCurrentPlayer ? 'bg-sky-900/50 border-sky-500/50' : 'bg-[#0f172a] border-slate-700/50';
+
+                    list.innerHTML += `
+                        <div class="${bgClass} rounded-2xl p-3 flex justify-between items-center border shrink-0">
+                            <div class="flex items-center gap-3">
+                                ${medal}
+                                <div class="font-black text-white uppercase text-sm">${entry.nama}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-emerald-400 font-black text-sm">${entry.score} <span class="text-[10px] text-emerald-600">PTS</span></div>
+                                <div class="text-[9px] text-slate-500 font-bold">${entry.time} Menit</div>
+                            </div>
+                        </div>`;
+                });
+            })
+            .catch(err => {
+                list.innerHTML = '<div class="text-center text-red-400 py-4 font-bold text-sm">Gagal memuat papan skor.</div>';
+            });
+    }
+
     function submitScoreToGAS() {
+        const list = document.getElementById('gameOverLeaderboardList');
+
         if (!GAS_URL || GAS_URL.includes("URL_GOOGLE_APPS_SCRIPT")) {
             console.log("Skor tidak dikirim: URL Google Apps Script belum diatur.");
+            fetchLeaderboard('gameOverLeaderboardList');
             return;
         }
 
@@ -390,9 +471,17 @@
         formData.append("Score", Math.floor(state.score));
         formData.append("Minutes", minutes);
 
+        if(list) list.innerHTML = '<div class="text-center text-slate-400 py-8 font-bold text-xs animate-pulse flex flex-col items-center justify-center gap-2 h-full"><i class="ph-bold ph-spinner animate-spin text-2xl"></i> Menyimpan skormu...</div>';
+
         fetch(GAS_URL, { method: 'POST', body: formData })
-            .then(res => console.log("Skor terkirim ke Google Sheets!"))
-            .catch(err => console.error("Gagal mengirim skor:", err));
+            .then(res => {
+                console.log("Skor terkirim ke Google Sheets!");
+                fetchLeaderboard('gameOverLeaderboardList'); // Refresh the list
+            })
+            .catch(err => {
+                console.error("Gagal mengirim skor:", err);
+                if(list) list.innerHTML = '<div class="text-center text-red-400 py-4 font-bold text-sm">Gagal menyimpan skor.</div>';
+            });
     }
 
     function triggerGameOver() {
@@ -430,8 +519,9 @@
             try {
                 const data = JSON.parse(raw);
                 state.playerName = data.playerName || "";
-                state.money = data.money || 0; state.score = data.score || 0; state.targetScore = data.targetScore || 300; 
+                state.money = data.money || 0; state.score = data.score || 0; 
                 state.level = data.level || 1; 
+                state.targetScore = data.targetScore || getTargetForLevel(state.level); 
                 state.levelTime = data.levelTime || 90; state.totalTimePlayed = data.totalTimePlayed || 0;
                 
                 state.inventory = data.inventory || []; state.logbook = data.logbook || {};
@@ -608,6 +698,15 @@
     }
 
     document.getElementById('startBtn').addEventListener('click', () => {
+        document.getElementById('introScreen').style.opacity = 0; 
+        setTimeout(() => {
+            document.getElementById('introScreen').style.display = 'none';
+            openModal('leaderboardModal');
+            fetchLeaderboard();
+        }, 800);
+    });
+
+    document.getElementById('startGameFinalBtn').addEventListener('click', () => {
         const nameInput = document.getElementById('playerNameInput').value.trim();
         if(!nameInput) {
             document.getElementById('playerNameInput').classList.add('border-red-500', 'animate-pulse');
@@ -617,8 +716,7 @@
         state.playerName = nameInput;
         state.isPlaying = true;
         
-        document.getElementById('introScreen').style.opacity = 0; 
-        setTimeout(() => document.getElementById('introScreen').style.display = 'none', 800);
+        closeModal('leaderboardModal');
         
         if(!audioState.initialized) initAudio(); 
         if(audioState.ctx && audioState.ctx.state === 'suspended') audioState.ctx.resume();
@@ -1231,7 +1329,8 @@
         if (!state.isGameOver) {
             if (state.mode === GAME_STATE.POWER_METER) {
                 state.powerMeter += 0.04 * state.powerDir * timeScale;
-                if (state.powerMeter >= 1 || state.powerMeter <= -1) state.powerDir *= -1;
+                if (state.powerMeter >= 1) { state.powerMeter = 1; state.powerDir = -1; }
+                else if (state.powerMeter <= -1) { state.powerMeter = -1; state.powerDir = 1; }
             }
             else if (state.mode === GAME_STATE.CASTING) {
                 state.hookDepth += 2 * timeScale;
