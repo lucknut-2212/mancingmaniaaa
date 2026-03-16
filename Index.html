@@ -323,7 +323,7 @@
     /** * MANCING MANIAAA * Leaderboard Edition */
 
     // URL Google Apps Script Anda - Ganti dengan URL deployment Web App milik Anda
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz0as_g1tIGhScNFLlbsZLzNuRMvSd8snwh9J7AlW3eDtk89DV2mzn7DpFuqgXlB9rdog/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxlm9lZdzg7WmWAfVmE07ehUM3SJy3vZQVBhmJUkAHwuH75hZs17Dukw6qSkW6j4YJThA/exec";
 
     const GAME_STATE = { IDLE: 0, POWER_METER: 1, CASTING: 2, WAITING: 3, FISHING: 4, GAMEOVER: 5 };
     const SAVE_KEY = 'mancingManiaSaveData_v8';
@@ -377,7 +377,6 @@
         }
     }
 
-    // Skor gradual: Level 1 = 350. Level 2 = 350 + (350 + 50) = 750. Level 3 = 750 + (350 + 100) = 1200.
     function getTargetForLevel(lvl) { 
         let target = 0;
         for(let i=1; i<=lvl; i++) {
@@ -420,7 +419,7 @@
         }
         
         // Cache busting agar selalu mengambil data ter-update
-        fetch(GAS_URL + "?t=" + new Date().getTime())
+        fetch(GAS_URL + "?t=" + new Date().getTime(), { redirect: "follow" })
             .then(res => res.text()) // Parse sebagai teks dulu untuk melokalisir error
             .then(text => {
                 try {
