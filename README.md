@@ -1,65 +1,83 @@
-🎣 Mancing Maniaaa
+🎣 Mancing Maniaaa - Leaderboard Edition
 
-Mancing Maniaaa adalah game memancing interaktif berbasis web (HTML5 Canvas) yang sangat dioptimalkan untuk perangkat mobile. Rasakan sensasi memancing yang realistis dengan mekanik tarik-ulur (reeling), siklus siang-malam, cuaca dinamis, dan puluhan jenis ikan unik mulai dari ikan badut hingga monster laut dalam legendaris!
+Mancing Maniaaa adalah game memancing interaktif berbasis web (HTML5 Canvas) yang sangat dioptimalkan untuk perangkat mobile. Pada versi Leaderboard Edition ini, game berubah menjadi mode Survival/Time Attack yang mendebarkan! Kumpulkan skor, penuhi target dalam 90 detik untuk naik level, dan ukir namamu di papan peringkat global!
 
 ✨ Fitur Utama
 
-Mekanik Memancing Dinamis (Tension & Stamina): Jaga indikator tarikan (tension) di area aman (sweet spot) untuk menguras stamina ikan tanpa memutuskan tali pancing.
+⏱️ Mode Survival 90 Detik: Kamu hanya punya 90 detik per level. Capai target skor (kelipatan 300) untuk mereset waktu dan naik ke level berikutnya! Jika gagal, Game Over.
 
-Interaksi Swipe-to-Counter: Ikan buas dan monster legendaris akan menarik kail ke kiri atau kanan. Pemain harus melakukan swipe di layar ke arah sebaliknya untuk melawan!
+🏆 Global Leaderboard (Google Sheets): Skor akhir dan waktu bertahanmu akan otomatis dikirim ke Google Sheets menggunakan Google Apps Script (GAS) saat Game Over.
 
-Haptic Feedback: Dukungan getaran (vibration) di perangkat mobile saat melempar kail, saat ikan menyambar, dan saat tali putus untuk pengalaman yang lebih imersif.
+👤 Karakter Vector HD & Visual Perahu Dinamis: Karakter utama di-render tajam menggunakan teknik Vector Canvas. Setiap barang yang kamu beli di Toko (Boks Es, Pancingan, Sonar, Lampu Petromaks, Minuman Energi) akan langsung muncul di atas kapalmu!
 
-Sistem Progresi (Level & XP): Tangkap ikan untuk mendapatkan XP dan naikkan level karaktermu dari Pemula hingga menjadi Legenda Laut.
+🛠️ Sistem Aksesoris (Buff Pasif): * 📡 Sonar Portabel: Mengurangi lonjakan tarikan ikan liar hingga 50%.
 
-4 Bioma / Lokasi Unik: Buka lokasi baru seiring naiknya levelmu:
+🏮 Lampu Petromaks: Meningkatkan kemungkinan munculnya ikan langka/monster di malam hari.
 
-Dermaga Tropis (Lvl 1)
+⚡ Minuman Energi: Menguras stamina ikan 2x lebih cepat saat ditarik di Sweet Spot.
 
-Terumbu Karang (Lvl 3)
+🐟 Jurnal Ikan & Boks Es Dinamis: Gambar ikan di UI bukan lagi lingkaran warna biasa, melainkan ikon vektor yang dibentuk sesuai wujud asli ikan yang kamu tangkap.
 
-Bangkai Kapal (Lvl 6)
+🌊 Lingkungan Sesuai Bioma & Bioluminescence: Latar belakang pulau, karang, bangkai kapal, atau palung laut akan berubah sesuai lokasimu. Di malam hari pada laut dalam, plankton dan ikan akan memancarkan cahaya neon (bioluminescence).
 
-Palung Mariana (Lvl 10)
-
-Toko Perlengkapan (Shop): Jual hasil tangkapanmu dan beli pancingan baru yang lebih kuat, boks es yang lebih besar, serta berbagai jenis umpan (Cacing, Daging, Fosfor).
-
-Jurnal Ikan (Logbook): Lacak setiap spesies ikan yang berhasil kamu tangkap beserta rekor berat maksimalnya.
-
-Siklus Waktu & Cuaca: Transisi siang dan malam yang mulus, serta event badai acak yang mempengaruhi peluang munculnya ikan langka.
-
-Audio Prosedural: Efek suara dan musik ambien (ombak, jangkrik, hujan) yang di-generate langsung menggunakan Web Audio API.
+📳 Haptic Feedback & Swipe-to-Counter: Efek getaran di mobile saat melempar kail atau digigit ikan. Melawan monster laut? Usap (swipe) layarmu ke arah yang berlawanan saat mereka mencoba kabur!
 
 🚀 Cara Bermain
 
-Lempar Kail: Ketuk tombol LEMPAR untuk memulai pengukur kekuatan (Power Meter). Ketuk lagi untuk melempar kail sesuai kedalaman yang diinginkan.
+Masukkan Nama: Masukkan namamu di layar awal untuk dicatat di Leaderboard.
 
-Tunggu Gigitan: Ujung pancingan akan bergetar saat ada ikan yang mendekat.
+Lempar Kail (Power Meter): Ketuk tombol LEMPAR untuk memulai pengukur kekuatan. Ketuk lagi saat bar penuh untuk melempar kail sedalam mungkin.
 
-Tarik (Reel): Tahan tombol TARIK saat ikan memakan umpan.
+Tarik (Reel): Tahan tombol TARIK saat ikan memakan umpan. Jaga indikator di bar biru (Sweet Spot) untuk menguras stamina ikan.
 
-Jaga Tarikan: Perhatikan bar merah di sebelah kanan. Jangan biarkan bar penuh hingga menyentuh tanda seru (!), atau tali akan putus! Lepas tombol untuk mengendurkan tali.
+Jaga Tarikan: Jangan biarkan bar merah penuh (hingga muncul tanda !), atau tali akan putus! Lepas tombol untuk mengendurkan tali.
 
-Perhatikan Arah: Jika muncul peringatan "SWIPE KE KANAN/KIRI", segera swipe layar ke arah tersebut untuk menggagalkan perlawanan ikan buas.
+Perhatikan Arah: Jika muncul peringatan "SWIPE KE KANAN/KIRI", segera usap layar ke arah tersebut untuk menggagalkan perlawanan ikan monster.
 
-🛠️ Instalasi & Menjalankan Game
+Beli Upgrade: Masuk ke Toko untuk menjual ikan dan meng-upgrade peralatan agar kamu bisa mencapai skor lebih tinggi sebelum waktu 90 detik habis!
 
-Game ini dibuat dengan Vanilla JavaScript dan murni menggunakan satu file HTML (Single-File Application) tanpa ketergantungan bundler atau server backend.
+🛠️ Instalasi & Integrasi Leaderboard
 
-Clone atau unduh repositori ini.
+Game ini murni menggunakan satu file HTML (Single-File Application). Anda bisa langsung membukanya di browser.
 
-Buka file Index.html langsung menggunakan browser modern (Chrome, Safari, Edge, Firefox).
+Setup Google Sheets untuk Papan Skor (Leaderboard):
 
-Selesai! Game siap dimainkan.
+Untuk mengaktifkan fitur penyimpanan skor otomatis, ikuti langkah ini:
 
-(Catatan: Untuk pengalaman terbaik, mainkan melalui perangkat mobile atau gunakan mode Inspect Element (F12) -> Device Toolbar di browser desktop Anda untuk mensimulasikan layar sentuh).
+Buat Google Sheets baru (misalnya "Leaderboard Mancing Mania").
+
+Buka menu Ekstensi > Apps Script.
+
+Copy-paste kode berikut ke dalam editor skrip:
+
+function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var nama = e.parameter.Nama || "Tanpa Nama";
+  var score = e.parameter.Score || 0;
+  var minutes = e.parameter.Minutes || 0;
+  sheet.appendRow([nama, score, minutes]);
+  return ContentService.createTextOutput("Success").setMimeType(ContentService.MimeType.TEXT);
+}
+
+
+Klik Terapkan (Deploy) > Deployment baru (New deployment).
+
+Pilih tipe Aplikasi Web (Web App).
+
+Set Jalankan sebagai menjadi Saya (Me), dan Yang memiliki akses menjadi Siapa saja (Anyone).
+
+Selesaikan otorisasi dan salin URL Web App yang diberikan.
+
+Buka file Index.html game ini, cari baris const GAS_URL = "URL_GOOGLE_APPS_SCRIPT_ANDA_DISINI"; dan ganti dengan URL Web App milik Anda.
+
+(Catatan: Untuk pengalaman bermain terbaik, mainkan melalui perangkat mobile sungguhan atau gunakan fitur Device Simulation di browser desktop).
 
 ☕ Dukung Kreator
 
-Suka dengan game ini? Kamu bisa mendukung pengembangan lebih lanjut dengan membelikan kreator kopi melalui Saweria!
+Suka dengan game ini? Dukung terus pengembangan game buatan lokal dengan membelikan kreator kopi melalui Saweria!
 
 📜 Lisensi & Kredit
 
-Game ini dikembangkan menggunakan Canvas API bawaan HTML5 dan menggunakan Phosphor Icons untuk grafis ikon UI.
+Game ini dikembangkan menggunakan Canvas API bawaan HTML5 dan menggunakan Phosphor Icons untuk antarmuka pengguna.
 
 Created with ❤️ by Lucknut Gaming
